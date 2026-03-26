@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V6.0 FINAL</title>
+    <title>ELITE CAR RENTAL V6.1 FINAL</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -220,20 +220,22 @@
         const reader = new FileReader();
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1];
-            const res = await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "upload",
-                    row: rowIdx,
-                    filename: file.name,
-                    mimeType: file.type,
-                    base64: base64
-                })
-            });
-            const fileUrl = await res.text();
-            currentData[rowIdx][6] = fileUrl;
-            renderTable();
-            updateStatus("LIVE", "#2ecc71");
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "upload",
+                        row: rowIdx,
+                        filename: file.name,
+                        mimeType: file.type,
+                        base64: base64
+                    })
+                });
+                const fileUrl = await res.text();
+                currentData[rowIdx][6] = fileUrl;
+                renderTable();
+                updateStatus("LIVE", "#2ecc71");
+            } catch (err) { updateStatus("UPLOAD ERROR", "#e74c3c"); }
         };
         reader.readAsDataURL(file);
     }
@@ -241,27 +243,38 @@
     async function runHistorySearch() {
         updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
-        const sD_in = document.getElementById('dateStart').value;
-        const eD_in = document.getElementById('dateEnd').value;
+        const startInput = document.getElementById('dateStart').value;
+        const endInput = document.getElementById('dateEnd').value;
         
-        let sD = sD_input ? new Date(sD_in + "T00:00:00") : null;
-        let eD = eD_input ? new Date(eD_in + "T23:59:59") : null;
+        // Force T00:00:00 to avoid timezone shifts
+        let searchS = startInput ? new Date(startInput + "T00:00:00") : null;
+        let searchE = endInput ? new Date(endInput + "T23:59:59") : null;
 
         try {
-            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
+            const res = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ action: "getHistory" }) 
+            });
             const history = await res.json();
             
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
+                
                 const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
                 
-                const rowOut = row[7] ? new Date(fmtDate(row[7]) + "T00:00:00") : null;
-                const rowIn = (row[10]||row[9]) ? new Date(fmtDate(row[10]||row[9]) + "T23:59:59") : null;
+                // Get row dates formatted as local strings first to ensure consistency
+                const rowOutStr = fmtDate(row[7]);
+                const rowInStr = fmtDate(row[10] || row[9]);
+                
+                const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
+                const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
                 
                 let dateMatch = true;
-                if (sD && eD && rowOut && rowIn) {
-                    dateMatch = (rowOut <= eD && rowIn >= sD);
+                if (searchS && searchE && rowOut && rowIn) {
+                    // Logic: Row overlaps if RowOut <= SearchEnd AND RowIn >= SearchStart
+                    dateMatch = (rowOut <= searchE && rowIn >= searchS);
                 }
+                
                 return textMatch && dateMatch;
             });
 
@@ -278,8 +291,12 @@
                     <td>${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
                 </tr>
             `).join('');
-            updateSearchStatus(filtered.length > 0 ? filtered.length+" FOUND" : "NO MATCH", "#2ecc71");
-        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
+
+            updateSearchStatus(filtered.length > 0 ? filtered.length + " FOUND" : "NO MATCH", "#2ecc71");
+        } catch (err) { 
+            console.error(err);
+            updateSearchStatus("ERROR", "#e74c3c"); 
+        }
     }
 
     function clearSearch() {
@@ -294,7 +311,6 @@
         if(!v) return ""; 
         const d = new Date(v); 
         if(isNaN(d)) return "";
-        // Forces local ISO date without timezone shifting
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
 
