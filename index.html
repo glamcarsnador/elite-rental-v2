@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V7.0 GLOBAL-SYNC</title>
+    <title>ELITE CAR RENTAL V7.5 ATOMIC SYNC</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -12,7 +12,7 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: #000; }
 
-        /* HEADER */
+        /* HEADER & SYNC BAR */
         .header-section { background: white; padding: 20px; border-bottom: 3px solid #ddd; }
         .logo-row { text-align: center; margin-bottom: 20px; }
         .main-logo { height: 160px; width: auto; }
@@ -23,18 +23,16 @@
             border: 1px solid #eee; border-radius: 8px;
         }
 
-        /* CLOCK STYLING */
-        .clock-container {
+        .clock-display {
             background: #000; color: #0f0; padding: 10px 20px; border-radius: 5px;
-            font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 18px;
-            display: flex; align-items: center; gap: 10px; border: 2px solid #333;
+            font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;
+            display: flex; flex-direction: column; align-items: center; min-width: 250px;
         }
         
         .legend-bar { display: flex; gap: 20px; align-items: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; }
         .dot { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
         .divider { width: 4px; height: 30px; background-color: #ccc; border-radius: 2px; }
-        .status-container { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 14px; }
 
         /* TABLES */
         .table-wrapper { padding: 20px; overflow-x: auto; }
@@ -43,7 +41,6 @@
         td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 60px; font-size: 18px; font-weight: 700; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
-        .star-select { color: #ffcc00; text-shadow: 1px 1px 0 #000; font-size: 22px; }
 
         /* ROW COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
@@ -51,14 +48,19 @@
         .row-active { background-color: #c8e6c9 !important; }   
         .row-overdue { background-color: var(--red) !important; color: var(--dark-red) !important; } 
 
-        .col-orange { background-color: var(--light-orange) !important; }
-        .btn-up { background: var(--blue); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
+        /* CONSOLE & SEARCH GRID */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
-        .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
-        .search-box { background: white; padding: 15px; border-radius: 8px; color: black; min-width: 400px; display: flex; gap: 10px; align-items: center; }
+        .search-grid { 
+            display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; 
+            max-width: 1200px; margin: 0 auto 30px auto; 
+        }
+        .search-box { 
+            background: white; padding: 15px; border-radius: 8px; color: black; 
+            display: flex; gap: 10px; align-items: center; flex: 1; min-width: 300px;
+        }
         .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-clear { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px; }
+        .btn-clear { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
         .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
     </style>
 </head>
@@ -67,9 +69,10 @@
 <div class="header-section">
     <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
-        <div class="clock-container">
-            <span id="clock-icon">🌐</span>
-            <span id="live-clock">00:00:00</span>
+        <div class="clock-display">
+            <div style="font-size: 12px; color: #aaa; margin-bottom: 4px;">OFFICIAL MOROCCO (GMT+1) <span id="clock-status">🌐</span></div>
+            <div id="live-date" style="color: #fff; letter-spacing: 1px;">01 JAN 2026</div>
+            <div id="live-clock" style="font-size: 24px;">00:00:00</div>
         </div>
 
         <div class="legend-bar">
@@ -81,7 +84,7 @@
         <div class="divider"></div>
         <div class="status-container">
             <div id="sync-dot" style="width:14px; height:14px; border-radius:50%; background:#ccc;"></div>
-            <span id="sync-text">CONNECTING...</span>
+            <span id="sync-text" style="font-weight: 900;">CONNECTING...</span>
         </div>
     </div>
 </div>
@@ -103,10 +106,18 @@
     <h2>INSIGHTS & HISTORY</h2>
     <div class="search-grid">
         <div class="search-box">
-            <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1;">
-            <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
+            <input type="text" id="uSearch" placeholder="Client Name, Phone, ID..." style="border:1px solid #ccc; flex:1; height: 40px;">
         </div>
+        <div class="search-box">
+            <span style="font-weight: bold; font-size: 12px;">DATE FROM:</span>
+            <input type="date" id="dateStart" style="border:1px solid #ccc; height: 40px;">
+            <span style="font-weight: bold; font-size: 12px;">TO:</span>
+            <input type="date" id="dateEnd" style="border:1px solid #ccc; height: 40px;">
+        </div>
+        <button class="btn-search" onclick="runHistorySearch()">SEARCH HISTORY</button>
+        <button class="btn-clear" onclick="clearSearch()">RESET</button>
     </div>
+    
     <div class="table-wrapper" style="background:transparent;">
         <table style="min-width:4400px; background: white; color: black;">
             <thead>
@@ -122,28 +133,25 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLgJp0nezihv8_kSJm5ryPj5eBT16w7y0uBxjVU5jqUel-kjJeGAfqDoOfWTfZ7_-QQg/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVgoL7ERJ6J6oR1B7xlp6Xud549mUmWRm_GMbulFJ7P-mqJ-kaR7kJ59Do5hLTI7e83g/exec"; 
     let currentData = [];
-    let officialTime = new Date(); // Master reference time
+    let officialTime = new Date();
     let isClockOfficial = false;
 
-    // --- DUAL API CLOCK LOGIC ---
+    // --- ENHANCED DUAL API SYNC (DATE + TIME) ---
     async function syncGlobalTime() {
         try {
-            // Attempt 1: WorldTimeAPI
             const res = await fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca');
             const data = await res.json();
-            officialTime = new Date(data.datetime);
+            officialTime = new Date(data.datetime); // Full Date-Time string
             isClockOfficial = true;
         } catch (e) {
             try {
-                // Attempt 2: TimeAPI.io
                 const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Africa/Casablanca');
                 const data = await res.json();
                 officialTime = new Date(data.dateTime);
                 isClockOfficial = true;
             } catch (e2) {
-                // Fallback: System Time
                 officialTime = new Date();
                 isClockOfficial = false;
             }
@@ -151,19 +159,16 @@
         updateClockDisplay();
     }
 
-    // Keep the clock ticking every second
     setInterval(() => {
         officialTime.setSeconds(officialTime.getSeconds() + 1);
         updateClockDisplay();
-        renderTable(); // Re-check overdue status every second
+        renderTable(); // Re-trigger overdue calculation every second
     }, 1000);
 
     function updateClockDisplay() {
-        const clockEl = document.getElementById('live-clock');
-        const iconEl = document.getElementById('clock-icon');
-        clockEl.innerText = officialTime.toLocaleTimeString('fr-FR');
-        iconEl.innerText = isClockOfficial ? "🌐" : "⚠️";
-        iconEl.title = isClockOfficial ? "Synchronized with GMT+1" : "Using Local System Time (API Failed)";
+        document.getElementById('live-date').innerText = officialTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+        document.getElementById('live-clock').innerText = officialTime.toLocaleTimeString('fr-FR');
+        document.getElementById('clock-status').innerText = isClockOfficial ? "🌐" : "⚠️";
     }
 
     async function init() {
@@ -178,14 +183,12 @@
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
-        const scrollPos = window.scrollY; // Preserve scroll
         tbody.innerHTML = "";
 
         for (let i = 1; i < currentData.length; i++) {
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // --- SYNCED OVERDUE LOGIC ---
             let isOverdue = false;
             const targetDateValue = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
@@ -204,7 +207,6 @@
                     parseInt(timeParts[1])
                 );
 
-                // Compare deadline against the Master Official Time
                 if (!isNaN(deadline.getTime()) && deadline < officialTime) {
                     isOverdue = true;
                 }
@@ -261,23 +263,54 @@
         }
     }
 
-    async function archive(i) { 
-        if(confirm("ARCHIVE?")) { 
-            updateStatus("ARCHIVING...", "#3498db");
-            // Pass the official time to the script so History is recorded accurately
-            await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ 
-                    action: "archive", 
-                    row: i, 
-                    data: currentData[i],
-                    officialTime: officialTime.toISOString()
-                }) 
-            }); 
-            location.reload(); 
-        } 
+    async function runHistorySearch() {
+        const query = document.getElementById('uSearch').value.toLowerCase();
+        const startVal = document.getElementById('dateStart').value;
+        const endVal = document.getElementById('dateEnd').value;
+        
+        let sD = startVal ? new Date(startVal + "T00:00:00") : null;
+        let eD = endVal ? new Date(endVal + "T23:59:59") : null;
+        
+        try {
+            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
+            const history = await res.json();
+            const filtered = history.filter((row, idx) => {
+                if(idx === 0) return false;
+                const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
+                const rowOutStr = fmtDate(row[7]);
+                const rowInStr = fmtDate(row[10] || row[9]);
+                const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
+                const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
+                let dateMatch = true;
+                if (sD && eD && rowOut && rowIn) {
+                    dateMatch = (rowOut <= eD && rowIn >= sD);
+                }
+                return textMatch && dateMatch;
+            });
+            document.getElementById('resBody').innerHTML = filtered.map(r => `
+                <tr>
+                    <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
+                    <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
+                    <td>${r[6] ? `<a href="${r[6]}" target="_blank" class="doc-link">📄</a>` : ''}</td>
+                    <td>${fmtDate(r[7])}</td><td>${cleanTime(r[8])}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${cleanTime(r[11])}</td>
+                    <td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td>
+                    <td>${r[17]||''}</td>
+                    <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
+                    <td>${r[19]||''}</td>
+                    <td style="font-size:18px; font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                </tr>
+            `).join('');
+        } catch (e) { alert("Search Error"); }
     }
 
+    function clearSearch() {
+        document.getElementById('uSearch').value = "";
+        document.getElementById('dateStart').value = "";
+        document.getElementById('dateEnd').value = "";
+        document.getElementById('resBody').innerHTML = "";
+    }
+
+    // Helper functions (fmtDate, cleanTime, autoDays, runMath, etc. remain unchanged)
     function fmtDate(v) { 
         if(!v) return ""; 
         const d = (v instanceof Date) ? v : new Date(v);
@@ -330,6 +363,13 @@
         updateStatus("LIVE", "#2ecc71"); 
     }
 
+    async function archive(i) { 
+        if(confirm("ARCHIVE?")) { 
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i], officialTime: officialTime.toISOString() }) }); 
+            location.reload(); 
+        } 
+    }
+    
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     init();
 </script>
