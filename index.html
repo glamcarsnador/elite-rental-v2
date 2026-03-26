@@ -38,8 +38,8 @@
         .row-overdue input { color: white !important; }
 
         /* BUTTONS */
-        .calc-btn { cursor: pointer; font-size: 14px; position: absolute; right: 5px; top: 35%; opacity: 0.6; }
-        .calc-btn:hover { opacity: 1; }
+        .calc-btn { cursor: pointer; font-size: 14px; position: absolute; right: 5px; top: 35%; opacity: 0.6; color: #333; z-index: 5; }
+        .calc-btn:hover { opacity: 1; color: var(--blue); }
         .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         
         /* INSIGHTS CONSOLE */
@@ -102,7 +102,7 @@
 </div>
 
 <script>
-    // 2. PASTE YOUR WEB APP URL HERE
+    // 1. PASTE YOUR WEB APP URL HERE
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwLEJnHvqpsdpmwm-d9xfVpATWNpSU4CGoH9GP_w2IGvwwALgHZ3dg96CDRAv89fHvvA/exec"; 
 
     let currentData = [];
@@ -125,12 +125,10 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // Color Logic
             if(row[15] === "RESERVED") tr.className = "row-reserved";
             else if(row[15] === "PARTIAL") tr.className = "row-partial";
             else if(row[15] === "ACTIVE/PAID") tr.className = "row-active";
 
-            // Overdue Logic
             const dateIn = new Date(row[9]);
             const [h, m] = (row[8] || "00:00").split(":");
             dateIn.setHours(parseInt(h), parseInt(m));
@@ -152,9 +150,9 @@
                 <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 <td><input type="number" id="days-${i}" value="${row[10]||''}" onchange="updateCell(${i},10,this.value)"><span class="calc-btn" onclick="autoDays(${i})">🔄</span></td>
-                <td><input type="number" id="prc-${i}" value="${row[11]||''}" onchange="runMath(${i})"></td>
-                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="runMath(${i})"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
-                <td><input type="number" id="adv-${i}" value="${row[13]||''}" onchange="runMath(${i})"></td>
+                <td><input type="number" id="prc-${i}" value="${row[11]||''}" onchange="updateCell(${i},11,this.value); runMath(${i})"></td>
+                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="updateCell(${i},12,this.value); runMath(${i})"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td><input type="number" id="adv-${i}" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" id="rem-${i}" value="${row[14]||''}" readonly><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
                 <td>
                     <select onchange="updateCell(${i},15,this.value)">
@@ -183,7 +181,7 @@
         const file = input.files[0];
         const reader = new FileReader();
         reader.onload = async (e) => {
-            updateStatus("UPLOADING PDF...", "#f39c12");
+            updateStatus("UPLOADING...", "#f39c12");
             const res = await fetch(SCRIPT_URL, {
                 method: "POST",
                 body: JSON.stringify({
@@ -193,6 +191,7 @@
             });
             const url = await res.text();
             updateCell(i, 6, url);
+            renderTable();
         };
         reader.readAsDataURL(file);
     }
@@ -203,7 +202,6 @@
         if(d1 && d2 && !isNaN(d1) && !isNaN(d2)) {
             const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
             const finalDays = diff > 0 ? diff : 1;
-            document.getElementById(`days-${i}`).value = finalDays;
             currentData[i][10] = finalDays;
             runMath(i);
         }
@@ -213,10 +211,23 @@
         const d = parseFloat(document.getElementById(`days-${i}`).value) || 0;
         const p = parseFloat(document.getElementById(`prc-${i}`).value) || 0;
         const a = parseFloat(document.getElementById(`adv-${i}`).value) || 0;
-        const total = d * p;
+        
+        // Use user-typed Total if it exists, otherwise calculate
+        let total = parseFloat(document.getElementById(`tot-${i}`).value);
+        if(isNaN(total) || total === 0) total = d * p;
+        
         const rem = total - a;
-        currentData[i][12] = total; currentData[i][14] = rem;
-        renderTable(); sync();
+
+        // Save to Data variable
+        currentData[i][10] = d;
+        currentData[i][11] = p;
+        currentData[i][12] = total;
+        currentData[i][13] = a;
+        currentData[i][14] = rem;
+
+        // Sync and re-render to keep visuals
+        sync();
+        renderTable();
     }
 
     async function runHistorySearch() {
@@ -245,9 +256,25 @@
             </tr>`).join('');
     }
 
-    function updateCell(r, c, v) { currentData[r][c] = v; sync(); }
-    async function sync() { updateStatus("SAVING...", "#f39c12"); await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); updateStatus("LIVE", "#2ecc71"); }
-    async function archive(i) { if(confirm("FINISH RENTAL AND MOVE TO HISTORY?")) { updateStatus("ARCHIVING...", "#f39c12"); await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); location.reload(); } }
+    function updateCell(r, c, v) { 
+        currentData[r][c] = v; 
+        sync(); 
+    }
+
+    async function sync() { 
+        updateStatus("SAVING...", "#f39c12"); 
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); 
+        updateStatus("LIVE", "#2ecc71"); 
+    }
+
+    async function archive(i) { 
+        if(confirm("FINISH RENTAL AND MOVE TO HISTORY?")) { 
+            updateStatus("ARCHIVING...", "#f39c12"); 
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); 
+            location.reload(); 
+        } 
+    }
+
     function fmtDate(v) { if(!v) return ""; const d = new Date(v); return isNaN(d) ? "" : d.toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     init();
