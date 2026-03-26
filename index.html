@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V5.0 PRO</title>
+    <title>ELITE CAR RENTAL V5.5 PLATINUM</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -33,7 +33,7 @@
         .table-wrapper { padding: 20px; overflow-x: auto; }
         table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); margin: 0 auto; }
         th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; font-size: 14px; }
-        td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 50px; }
+        td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 60px; font-size: 18px; font-weight: 700; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
 
@@ -64,13 +64,18 @@
         }
         .btn-search:hover { background: var(--orange); }
 
-        .search-status { 
-            display: inline-flex; align-items: center; gap: 8px; 
-            background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px;
-            margin-bottom: 20px; font-weight: bold; font-size: 12px;
+        .btn-clear {
+            background: #e74c3c; color: white; border: none; padding: 8px 15px; 
+            border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px;
+        }
+        .btn-clear:hover { background: #c0392b; }
+
+        .search-status-bar { 
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin-left: auto; margin-right: auto;
         }
         
-        .doc-link { text-decoration: none; font-size: 22px; cursor: pointer; }
+        .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -107,10 +112,13 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
-    <div class="search-status">
-        <div id="search-dot" style="width:10px; height:10px; border-radius:50%; background:#aaa;"></div>
-        <span id="search-text">READY TO SEARCH</span>
+    
+    <div class="search-status-bar">
+        <div id="search-dot" style="width:12px; height:12px; border-radius:50%; background:#aaa;"></div>
+        <span id="search-text" style="font-weight:bold; font-size:14px;">READY TO SEARCH</span>
+        <button class="btn-clear" onclick="clearSearch()">CLEAR RESULTS</button>
     </div>
+
     <div class="search-grid">
         <div class="search-box">
             <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1;">
@@ -123,6 +131,7 @@
             <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
         </div>
     </div>
+
     <div class="table-wrapper" style="background:transparent;">
         <table style="min-width:4400px; background: white; color: black;">
             <thead>
@@ -138,7 +147,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwesVmnLi2yINh-Efn8EKK17svzrZFUaEC06qsr0HqUbKgQziXnBx4LTF8BAU3aJ2yMKg/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyKEsms14HcbEScL9e21U7EB5yXBu0zHny4WWxyCrVhwsBjntj8ZcsjdtoOxGdtSXOXw/exec"; 
     let currentData = [];
 
     async function init() {
@@ -225,10 +234,12 @@
         updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
         
-        // DATE LOGIC FIX: Set end date to the end of the day (23:59:59)
-        const sD = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value) : null;
-        let eD = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value) : null;
-        if(eD) eD.setHours(23, 59, 59, 999);
+        const sD_input = document.getElementById('dateStart').value;
+        const eD_input = document.getElementById('dateEnd').value;
+        
+        let searchStart = sD_input ? new Date(sD_input) : null;
+        let searchEnd = eD_input ? new Date(eD_input) : null;
+        if(searchEnd) searchEnd.setHours(23, 59, 59, 999);
 
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
@@ -236,17 +247,25 @@
             
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
-                const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
                 
-                const carOut = new Date(row[7]); 
-                const carIn = row[10] ? new Date(row[10]) : new Date(row[9]);
+                // 1. Text match (Universal Search)
+                const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
                 
-                // If either date falls within the range
-                const dateMatch = (!sD || !eD) ? true : (
-                    (carOut >= sD && carOut <= eD) || 
-                    (carIn >= sD && carIn <= eD) ||
-                    (carOut <= sD && carIn >= eD)
-                );
+                // 2. TRUE OVERLAP LOGIC
+                let dateMatch = true;
+                if (searchStart && searchEnd) {
+                    const rowOut = new Date(row[7]);
+                    const rowIn = row[10] ? new Date(row[10]) : (row[9] ? new Date(row[9]) : null);
+                    
+                    if (rowOut && rowIn) {
+                        // Logic: A row overlaps if RowStart <= SearchEnd AND RowEnd >= SearchStart
+                        dateMatch = (rowOut <= searchEnd && rowIn >= searchStart);
+                    } else if (rowOut) {
+                        // Fallback if only Date Out exists
+                        dateMatch = (rowOut >= searchStart && rowOut <= searchEnd);
+                    }
+                }
+                
                 return textMatch && dateMatch;
             });
 
@@ -261,7 +280,7 @@
                     <td>${r[17]||''}</td>
                     <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
                     <td>${r[19]||''}</td>
-                    <td style="font-size:10px;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                    <td style="font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
                 </tr>
             `).join('');
 
@@ -269,10 +288,18 @@
         } catch (err) { updateSearchStatus("SEARCH FAILED", "#e74c3c"); }
     }
 
+    function clearSearch() {
+        document.getElementById('uSearch').value = "";
+        document.getElementById('dateStart').value = "";
+        document.getElementById('dateEnd').value = "";
+        document.getElementById('resBody').innerHTML = "";
+        updateSearchStatus("READY TO SEARCH", "#aaa");
+    }
+
     function cleanTime(t) {
         if(!t) return "";
         const s = String(t);
-        if(s.includes('T')) return s.split('T')[1].substring(0, 5); // Extracts HH:MM from ISO string
+        if(s.includes('T')) return s.split('T')[1].substring(0, 5);
         return s.substring(0, 5);
     }
 
