@@ -135,7 +135,6 @@
             const timeParts = (row[8] || "00:00").split(":");
             dateIn.setHours(parseInt(timeParts[0] || 0), parseInt(timeParts[1] || 0));
 
-            // Priority: Red if Overdue
             if (row[2] && dateIn < now) {
                 tr.className = "row-overdue";
             } else {
@@ -162,9 +161,9 @@
                 
                 <td><input type="number" id="days-${i}" value="${row[10]||''}" onchange="updateCell(${i},10,this.value); runMath(${i})"><span class="calc-btn" onclick="autoDays(${i})">🔄</span></td>
                 <td><input type="number" id="prc-${i}" value="${row[11]||''}" onchange="updateCell(${i},11,this.value); runMath(${i})"></td>
-                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="updateCell(${i},12,this.value); runMath(${i})"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="updateCell(${i},12,this.value); runMath(${i}, true)"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
                 <td><input type="number" id="adv-${i}" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
-                <td><input type="number" id="rem-${i}" value="${row[14]||''}" readonly><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td><input type="number" id="rem-${i}" value="${row[14]||''}" onchange="updateCell(${i},14,this.value); runMath(${i}, true)"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
                 
                 <td>
                     <select onchange="updateCell(${i},15,this.value); renderTable();">
@@ -199,16 +198,31 @@
         }
     }
 
-    function runMath(i) {
-        const d = parseFloat(currentData[i][10]) || 0;
-        const p = parseFloat(currentData[i][11]) || 0;
-        const a = parseFloat(currentData[i][13]) || 0;
-        const total = d * p;
-        const rem = total - a;
+    function runMath(i, isManual = false) {
+        const d = parseFloat(document.getElementById(`days-${i}`).value) || 0;
+        const p = parseFloat(document.getElementById(`prc-${i}`).value) || 0;
+        const a = parseFloat(document.getElementById(`adv-${i}`).value) || 0;
+        
+        let total, rem;
+
+        if (isManual) {
+            // If the user typed it, use exactly what is in the box
+            total = parseFloat(document.getElementById(`tot-${i}`).value) || 0;
+            rem = parseFloat(document.getElementById(`rem-${i}`).value) || 0;
+        } else {
+            // Otherwise, auto-calculate
+            total = d * p;
+            rem = total - a;
+        }
+
+        currentData[i][10] = d;
+        currentData[i][11] = p;
         currentData[i][12] = total;
+        currentData[i][13] = a;
         currentData[i][14] = rem;
-        renderTable(); 
+
         sync();
+        renderTable(); 
     }
 
     function updateCell(r, c, v) { 
@@ -219,10 +233,8 @@
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
         
-        // CLEANING PASS: Convert dates and times to simple strings before sending
         const cleanData = currentData.map(row => row.map((cell, idx) => {
             if ((idx === 7 || idx === 8 || idx === 9) && cell) {
-                // Remove weird ISO timestamps or Date objects
                 return String(cell).split('T')[0]; 
             }
             return cell;
