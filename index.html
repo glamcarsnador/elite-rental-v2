@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V6.2 PLATINUM</title>
+    <title>ELITE CAR RENTAL V6.3 PLATINUM FINAL</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -151,19 +151,18 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // --- OVERDUE LOGIC FIX ---
+            // --- UPDATED TYPE-AGNOSTIC OVERDUE LOGIC ---
             let isOverdue = false;
-            const targetDateStr = row[10] ? row[10] : row[9]; 
+            const targetDateRaw = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
 
-            if (targetDateStr && row[2]) {
-                const datePart = fmtDate(targetDateStr); 
+            if (targetDateRaw && row[2]) {
+                const datePart = (targetDateRaw instanceof Date) 
+                    ? targetDateRaw.toISOString().split('T')[0] 
+                    : fmtDate(targetDateRaw);
                 const timePart = cleanTime(targetTimeStr);
                 const deadline = new Date(`${datePart}T${timePart}:00`);
-
-                if (!isNaN(deadline.getTime()) && deadline < now) {
-                    isOverdue = true;
-                }
+                if (!isNaN(deadline.getTime()) && deadline < now) isOverdue = true;
             }
 
             if (isOverdue) tr.className = "row-overdue";
@@ -245,30 +244,24 @@
         const query = document.getElementById('uSearch').value.toLowerCase();
         const startVal = document.getElementById('dateStart').value;
         const endVal = document.getElementById('dateEnd').value;
-        
         let sD = startVal ? new Date(startVal + "T00:00:00") : null;
         let eD = endVal ? new Date(endVal + "T23:59:59") : null;
-
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
             const history = await res.json();
-            
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
                 const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
-                
                 const rowOutStr = fmtDate(row[7]);
                 const rowInStr = fmtDate(row[10] || row[9]);
                 const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
                 const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
-                
                 let dateMatch = true;
                 if (sD && eD && rowOut && rowIn) {
                     dateMatch = (rowOut <= eD && rowIn >= sD);
                 }
                 return textMatch && dateMatch;
             });
-
             document.getElementById('resBody').innerHTML = filtered.map(r => `
                 <tr>
                     <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
@@ -296,7 +289,7 @@
 
     function fmtDate(v) { 
         if(!v) return ""; 
-        const d = new Date(v); 
+        const d = (v instanceof Date) ? v : new Date(v);
         if(isNaN(d)) return "";
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
@@ -309,9 +302,11 @@
     }
 
     function autoDays(i) {
-        const dOut = new Date(fmtDate(currentData[i][7]) + "T12:00:00");
-        const dIn = new Date(fmtDate(currentData[i][10] || currentData[i][9]) + "T12:00:00");
-        if(!isNaN(dOut.getTime()) && !isNaN(dIn.getTime())) {
+        const dOutStr = fmtDate(currentData[i][7]);
+        const dInStr = fmtDate(currentData[i][10] || currentData[i][9]);
+        if(dOutStr && dInStr) {
+            const dOut = new Date(dOutStr + "T12:00:00");
+            const dIn = new Date(dInStr + "T12:00:00");
             const diff = Math.ceil((dIn - dOut) / (1000 * 60 * 60 * 24));
             currentData[i][12] = diff > 0 ? diff : 1;
             runMath(i);
