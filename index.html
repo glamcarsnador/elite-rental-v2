@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ELITE RENTAL V2.0</title>
+    <style>
+        :root { 
+            --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
+            --red: #e74c3c; --blue: #3498db; --light-orange: #fff4e6;
+        }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; text-align: center; }
+        
+        /* LOGO & HEADER */
+        .logo-container { padding: 20px; background: white; }
+        .logo-placeholder { font-size: 32px; font-weight: 900; color: var(--primary); }
+        /* Add your logo image here: <img src="logo.png" style="height:80px;"> */
+
+        .header { background: white; padding: 15px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-around; align-items: center; }
+        
+        /* TABLE STYLES */
+        .table-wrapper { padding: 20px; overflow-x: auto; }
+        table { border-collapse: collapse; background: white; min-width: 3500px; border: 3px solid #333; margin: 0 auto; }
+        th { background: var(--primary); color: white; padding: 15px; text-transform: uppercase; border: 1px solid #444; }
+        td { border: 1px solid #333; padding: 0; text-align: center; height: 50px; }
+        
+        /* INPUTS */
+        input, select { border: none; width: 100%; height: 100%; text-align: center; font-size: 16px; font-weight: 600; outline: none; background: transparent; }
+        
+        /* SPECIAL COLORS */
+        .col-orange { background-color: var(--light-orange) !important; font-weight: 900 !important; }
+        .row-reserved { background-color: #d1ecf1; }
+        .row-partial { background-color: #fff3cd; }
+        .row-active { background-color: #d4edda; }
+        .row-overdue { background-color: var(--red) !important; color: white !important; }
+        .row-overdue input { color: white !important; }
+
+        /* RECALC BUTTONS */
+        .calc-btn { cursor: pointer; font-size: 12px; background: #ddd; border-radius: 3px; padding: 2px 5px; margin-left: -25px; position: absolute; }
+
+        /* INSIGHTS CONSOLE */
+        .console { background: #34495e; color: white; padding: 30px; margin-top: 50px; text-align: left; }
+        .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        .results-table { min-width: 100%; margin-top: 20px; background: white; color: black; }
+    </style>
+</head>
+<body>
+
+<div class="logo-container">
+    <div class="logo-placeholder">ELITE CAR RENTAL</div>
+</div>
+
+<div class="header">
+    <button onclick="undo()" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">⬅ UNDO</button>
+    <div><span id="sync-dot" style="display:inline-block; width:12px; height:12px; border-radius:50%; background:#ccc;"></span> <b id="sync-text">CONNECTING...</b></div>
+    <button onclick="redo()" style="background:#7f8c8d; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">REDO ➡</button>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th>
+                <th>DATE OUT</th><th>TIME</th><th>DATE IN</th><th>DAYS</th><th>DAY PRICE</th><th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th>
+                <th>STATE</th><th>RANKING</th><th>ACTIONS</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+</div>
+
+<div class="console">
+    <h2>INSIGHTS & HISTORY</h2>
+    <div class="search-grid">
+        <div>
+            <h3>UNIVERSAL SEARCH</h3>
+            <input type="text" id="uSearch" placeholder="Search Name, Phone, ID..." oninput="runHistorySearch()" style="background:white; height:40px; text-align:left; padding-left:10px; border-radius:5px;">
+        </div>
+        <div>
+            <h3>PERIOD SEARCH</h3>
+            <input type="date" id="dateStart" onchange="runHistorySearch()"> to <input type="date" id="dateEnd" onchange="runHistorySearch()">
+        </div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="results-table">
+            <thead><tr id="resHead"></tr></thead>
+            <tbody id="resBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxJe6Pm9WFpce-rOrdxQXNZLuq2afrrld215nNXcNJupEpHURTkeoPSvpQl7lAVvOl8eQ/exec";
+    let currentData = [];
+    let stateHistory = [];
+
+    async function init() {
+        const res = await fetch(SCRIPT_URL);
+        currentData = await res.json();
+        renderTable();
+        updateStatus("LIVE", "#2ecc71");
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = "";
+        const now = new Date();
+
+        for (let i = 1; i < currentData.length; i++) {
+            const row = currentData[i];
+            const tr = document.createElement('tr');
+            
+            // STATE COLORS
+            if(row[15] === "RESERVED") tr.className = "row-reserved";
+            else if(row[15] === "PARTIAL") tr.className = "row-partial";
+            else if(row[15] === "ACTIVE/PAID") tr.className = "row-active";
+
+            // OVERDUE LOGIC
+            const dateIn = new Date(row[9]);
+            const [h, m] = (row[8] || "00:00").split(":");
+            dateIn.setHours(h, m);
+            if (dateIn < now && row[2]) tr.classList.add('row-overdue');
+
+            tr.innerHTML = `
+                <td class="col-orange"><input value="${row[0]||''}" onchange="updateCell(${i},0,this.value)"></td>
+                <td class="col-orange"><input value="${row[1]||''}" onchange="updateCell(${i},1,this.value)"></td>
+                <td><input value="${row[2]||''}" onchange="updateCell(${i},2,this.value)"></td>
+                <td><input value="${row[3]||''}" onchange="updateCell(${i},3,this.value)"></td>
+                <td><input value="${row[4]||''}" onchange="updateCell(${i},4,this.value)"></td>
+                <td><input value="${row[5]||''}" onchange="updateCell(${i},5,this.value)"></td>
+                <td>
+                    <button onclick="document.getElementById('up-${i}').click()">PDF</button>
+                    <input type="file" id="up-${i}" hidden onchange="handleFile(${i}, this)">
+                    ${row[6] ? `<a href="${row[6]}" target="_blank">📄</a>` : ''}
+                </td>
+                <td><input type="date" value="${fmtDate(row[7])}" onchange="updateCell(${i},7,this.value); autoDays(${i})"></td>
+                <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
+                <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
+                <td><input type="number" id="days-${i}" value="${row[10]||''}" onchange="updateCell(${i},10,this.value)"><span class="calc-btn" onclick="autoDays(${i})">🔄</span></td>
+                <td><input type="number" id="prc-${i}" value="${row[11]||''}" onchange="runMath(${i})"></td>
+                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="runMath(${i})"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td><input type="number" id="adv-${i}" value="${row[13]||''}" onchange="runMath(${i})"></td>
+                <td><input type="number" id="rem-${i}" value="${row[14]||''}" readonly><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td>
+                    <select onchange="updateCell(${i},15,this.value)">
+                        <option value="" ${row[15]==''?'selected':''}>-</option>
+                        <option value="ACTIVE/PAID" ${row[15]=='ACTIVE/PAID'?'selected':''}>ACTIVE/PAID</option>
+                        <option value="RESERVED" ${row[15]=='RESERVED'?'selected':''}>RESERVED</option>
+                        <option value="PARTIAL" ${row[15]=='PARTIAL'?'selected':''}>PARTIAL</option>
+                    </select>
+                </td>
+                <td>
+                    <select onchange="updateCell(${i},16,this.value)">
+                        <option value="1" ${row[16]=='1'?'selected':''}>1</option>
+                        <option value="2" ${row[16]=='2'?'selected':''}>2</option>
+                        <option value="3" ${row[16]=='3'?'selected':''}>3</option>
+                        <option value="4" ${row[16]=='4'?'selected':''}>4</option>
+                        <option value="5" ${row[16]=='5'?'selected':''}>5</option>
+                    </select>
+                </td>
+                <td><button onclick="archive(${i})" style="background:var(--primary); color:white; border:none; padding:5px 10px; cursor:pointer;">FINISH</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+    }
+
+    async function handleFile(i, input) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            updateStatus("UPLOADING...", "orange");
+            const res = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "upload", filename: file.name, mimeType: file.type, 
+                    base64: e.target.result.split(',')[1]
+                })
+            });
+            const url = await res.text();
+            updateCell(i, 6, url);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function autoDays(i) {
+        const d1 = new Date(currentData[i][7]);
+        const d2 = new Date(currentData[i][9]);
+        if(d1 && d2) {
+            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+            document.getElementById(`days-${i}`).value = diff > 0 ? diff : 0;
+            currentData[i][10] = diff;
+            runMath(i);
+        }
+    }
+
+    function runMath(i) {
+        const d = parseFloat(document.getElementById(`days-${i}`).value) || 0;
+        const p = parseFloat(document.getElementById(`prc-${i}`).value) || 0;
+        const a = parseFloat(document.getElementById(`adv-${i}`).value) || 0;
+        const total = d * p;
+        const rem = total - a;
+        currentData[i][12] = total; currentData[i][14] = rem;
+        renderTable(); sync();
+    }
+
+    async function runHistorySearch() {
+        const query = document.getElementById('uSearch').value.toLowerCase();
+        const sD = new Date(document.getElementById('dateStart').value);
+        const eD = new Date(document.getElementById('dateEnd').value);
+        
+        const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
+        const history = await res.json();
+        
+        const filtered = history.filter((row, idx) => {
+            if(idx === 0) return false;
+            const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
+            const carOut = new Date(row[7]);
+            const carIn = new Date(row[9]);
+            const dateMatch = (isNaN(sD) || isNaN(eD)) ? true : (carOut <= eD && carIn >= sD);
+            return textMatch && dateMatch;
+        });
+
+        const resBody = document.getElementById('resBody');
+        resBody.innerHTML = filtered.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+    }
+
+    function updateCell(r, c, v) { currentData[r][c] = v; renderTable(); sync(); }
+    async function sync() { fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); }
+    async function archive(i) { if(confirm("Archive?")) { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); location.reload(); } }
+    function fmtDate(v) { return v ? new Date(v).toISOString().split('T')[0] : ""; }
+    function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
+    init();
+</script>
+</body>
+</html>
