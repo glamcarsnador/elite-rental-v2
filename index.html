@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V6.5 ULTRA</title>
+    <title>ELITE CAR RENTAL V7.0 GLOBAL-SYNC</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -22,6 +22,13 @@
             gap: 25px; flex-wrap: wrap; padding: 15px; background: #fdfdfd; 
             border: 1px solid #eee; border-radius: 8px;
         }
+
+        /* CLOCK STYLING */
+        .clock-container {
+            background: #000; color: #0f0; padding: 10px 20px; border-radius: 5px;
+            font-family: 'Courier New', Courier, monospace; font-weight: bold; font-size: 18px;
+            display: flex; align-items: center; gap: 10px; border: 2px solid #333;
+        }
         
         .legend-bar { display: flex; gap: 20px; align-items: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; }
@@ -36,7 +43,6 @@
         td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 60px; font-size: 18px; font-weight: 700; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
-
         .star-select { color: #ffcc00; text-shadow: 1px 1px 0 #000; font-size: 22px; }
 
         /* ROW COLORS */
@@ -48,19 +54,11 @@
         .col-orange { background-color: var(--light-orange) !important; }
         .btn-up { background: var(--blue); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-        /* CONSOLE & SEARCH */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
         .search-box { background: white; padding: 15px; border-radius: 8px; color: black; min-width: 400px; display: flex; gap: 10px; align-items: center; }
-        
         .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-clear { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px; }
-
-        .search-status-bar { 
-            display: flex; align-items: center; justify-content: center; gap: 10px; 
-            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin: 0 auto 20px auto;
-        }
-        
         .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
     </style>
 </head>
@@ -69,6 +67,11 @@
 <div class="header-section">
     <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
+        <div class="clock-container">
+            <span id="clock-icon">🌐</span>
+            <span id="live-clock">00:00:00</span>
+        </div>
+
         <div class="legend-bar">
             <div class="legend-item"><div class="dot" style="background:#b3e5fc"></div> RESERVED</div>
             <div class="legend-item"><div class="dot" style="background:#fff9c4"></div> PARTIAL</div>
@@ -98,20 +101,9 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
-    <div class="search-status-bar">
-        <div id="search-dot" style="width:12px; height:12px; border-radius:50%; background:#aaa;"></div>
-        <span id="search-text">READY TO SEARCH</span>
-        <button class="btn-clear" onclick="clearSearch()">CLEAR RESULTS</button>
-    </div>
     <div class="search-grid">
         <div class="search-box">
             <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1;">
-            <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
-        </div>
-        <div class="search-box">
-            <input type="date" id="dateStart" style="border:1px solid #ccc;">
-            <span>TO</span>
-            <input type="date" id="dateEnd" style="border:1px solid #ccc;">
             <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
         </div>
     </div>
@@ -130,10 +122,52 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsWMa7igsrcvG_RC-phvqJS1aYndPIfS6YSa20W_WFIxdbPutzJeUxJxTdrv5gjRN2mg/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLgJp0nezihv8_kSJm5ryPj5eBT16w7y0uBxjVU5jqUel-kjJeGAfqDoOfWTfZ7_-QQg/exec"; 
     let currentData = [];
+    let officialTime = new Date(); // Master reference time
+    let isClockOfficial = false;
+
+    // --- DUAL API CLOCK LOGIC ---
+    async function syncGlobalTime() {
+        try {
+            // Attempt 1: WorldTimeAPI
+            const res = await fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca');
+            const data = await res.json();
+            officialTime = new Date(data.datetime);
+            isClockOfficial = true;
+        } catch (e) {
+            try {
+                // Attempt 2: TimeAPI.io
+                const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Africa/Casablanca');
+                const data = await res.json();
+                officialTime = new Date(data.dateTime);
+                isClockOfficial = true;
+            } catch (e2) {
+                // Fallback: System Time
+                officialTime = new Date();
+                isClockOfficial = false;
+            }
+        }
+        updateClockDisplay();
+    }
+
+    // Keep the clock ticking every second
+    setInterval(() => {
+        officialTime.setSeconds(officialTime.getSeconds() + 1);
+        updateClockDisplay();
+        renderTable(); // Re-check overdue status every second
+    }, 1000);
+
+    function updateClockDisplay() {
+        const clockEl = document.getElementById('live-clock');
+        const iconEl = document.getElementById('clock-icon');
+        clockEl.innerText = officialTime.toLocaleTimeString('fr-FR');
+        iconEl.innerText = isClockOfficial ? "🌐" : "⚠️";
+        iconEl.title = isClockOfficial ? "Synchronized with GMT+1" : "Using Local System Time (API Failed)";
+    }
 
     async function init() {
+        await syncGlobalTime();
         try {
             const res = await fetch(SCRIPT_URL);
             currentData = await res.json();
@@ -144,28 +178,21 @@
 
     function renderTable() {
         const tbody = document.getElementById('tableBody');
+        const scrollPos = window.scrollY; // Preserve scroll
         tbody.innerHTML = "";
-        
-        // IMPORTANT: Use the local browser time
-        const now = new Date();
 
         for (let i = 1; i < currentData.length; i++) {
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // --- STRICT LOCAL OVERDUE LOGIC ---
+            // --- SYNCED OVERDUE LOGIC ---
             let isOverdue = false;
-            // Column 10 is Extended Date, Column 9 is Date In
             const targetDateValue = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
 
             if (targetDateValue && row[2]) {
-                // FORCE convert whatever comes from Sheets into a YYYY-MM-DD string
                 const dateString = fmtDate(targetDateValue);
                 const timeString = cleanTime(targetTimeStr);
-                
-                // Construct a Date object using Local Time (No "Z")
-                // Format: YYYY, MM (0-indexed), DD, HH, mm
                 const dateParts = dateString.split('-');
                 const timeParts = timeString.split(':');
                 
@@ -177,7 +204,8 @@
                     parseInt(timeParts[1])
                 );
 
-                if (!isNaN(deadline.getTime()) && deadline < now) {
+                // Compare deadline against the Master Official Time
+                if (!isNaN(deadline.getTime()) && deadline < officialTime) {
                     isOverdue = true;
                 }
             }
@@ -203,14 +231,14 @@
                 <td><input type="time" value="${cleanTime(row[8])}" onchange="updateCell(${i},8,this.value)"></td>
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 <td><input type="date" value="${fmtDate(row[10])}" onchange="updateCell(${i},10,this.value); autoDays(${i})"></td>
-                <td><input type="time" value="${cleanTime(row[11])}" onchange="updateCell(${i},11,this.value); renderTable()"></td>
+                <td><input type="time" value="${cleanTime(row[11])}" onchange="updateCell(${i},11,this.value)"></td>
                 <td><input type="number" value="${row[12]||''}" readonly></td>
                 <td><input type="number" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" value="${row[14]||''}" readonly></td>
                 <td><input type="number" value="${row[15]||''}" onchange="updateCell(${i},15,this.value); runMath(${i})"></td>
                 <td><input type="number" id="rem-${i}" value="${row[16]||''}" onchange="updateCell(${i},16,this.value); runMath(${i}, true)"><span onclick="runMath(${i})" style="cursor:pointer;position:absolute;right:5px;top:25%;">🔄</span></td>
                 <td>
-                    <select onchange="updateCell(${i},17,this.value); renderTable();">
+                    <select onchange="updateCell(${i},17,this.value);">
                         <option value="" ${row[17]==''?'selected':''}>-</option>
                         <option value="ACTIVE/PAID" ${row[17]=='ACTIVE/PAID'?'selected':''}>ACTIVE/PAID</option>
                         <option value="RESERVED" ${row[17]=='RESERVED'?'selected':''}>RESERVED</option>
@@ -233,77 +261,21 @@
         }
     }
 
-    async function handleFile(rowIdx, input) {
-        if (!input.files[0]) return;
-        updateStatus("UPLOADING...", "#3498db");
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const base64 = e.target.result.split(',')[1];
-            try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "upload", row: rowIdx, filename: file.name, mimeType: file.type, base64: base64
-                    })
-                });
-                const fileUrl = await res.text();
-                currentData[rowIdx][6] = fileUrl;
-                renderTable();
-                updateStatus("LIVE", "#2ecc71");
-            } catch (err) { updateStatus("UPLOAD ERROR", "#e74c3c"); }
-        };
-        reader.readAsDataURL(file);
-    }
-
-    async function runHistorySearch() {
-        updateSearchStatus("SEARCHING...", "#f39c12");
-        const query = document.getElementById('uSearch').value.toLowerCase();
-        const startVal = document.getElementById('dateStart').value;
-        const endVal = document.getElementById('dateEnd').value;
-        
-        let sD = startVal ? new Date(startVal + "T00:00:00") : null;
-        let eD = endVal ? new Date(endVal + "T23:59:59") : null;
-        
-        try {
-            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
-            const history = await res.json();
-            const filtered = history.filter((row, idx) => {
-                if(idx === 0) return false;
-                const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
-                const rowOutStr = fmtDate(row[7]);
-                const rowInStr = fmtDate(row[10] || row[9]);
-                const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
-                const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
-                let dateMatch = true;
-                if (sD && eD && rowOut && rowIn) {
-                    dateMatch = (rowOut <= eD && rowIn >= sD);
-                }
-                return textMatch && dateMatch;
-            });
-            document.getElementById('resBody').innerHTML = filtered.map(r => `
-                <tr>
-                    <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
-                    <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
-                    <td>${r[6] ? `<a href="${r[6]}" target="_blank" class="doc-link">📄</a>` : ''}</td>
-                    <td>${fmtDate(r[7])}</td><td>${cleanTime(r[8])}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${cleanTime(r[11])}</td>
-                    <td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td>
-                    <td>${r[17]||''}</td>
-                    <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
-                    <td>${r[19]||''}</td>
-                    <td style="font-size:18px; font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
-                </tr>
-            `).join('');
-            updateSearchStatus(filtered.length > 0 ? filtered.length + " FOUND" : "NO MATCH", "#2ecc71");
-        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
-    }
-
-    function clearSearch() {
-        document.getElementById('uSearch').value = "";
-        document.getElementById('dateStart').value = "";
-        document.getElementById('dateEnd').value = "";
-        document.getElementById('resBody').innerHTML = "";
-        updateSearchStatus("READY TO SEARCH", "#aaa");
+    async function archive(i) { 
+        if(confirm("ARCHIVE?")) { 
+            updateStatus("ARCHIVING...", "#3498db");
+            // Pass the official time to the script so History is recorded accurately
+            await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ 
+                    action: "archive", 
+                    row: i, 
+                    data: currentData[i],
+                    officialTime: officialTime.toISOString()
+                }) 
+            }); 
+            location.reload(); 
+        } 
     }
 
     function fmtDate(v) { 
@@ -349,7 +321,6 @@
 
     function updateCell(r, c, v) { 
         currentData[r][c] = v; 
-        if([7,9,10,11,17].includes(c)) renderTable(); 
         sync(); 
     }
 
@@ -359,15 +330,7 @@
         updateStatus("LIVE", "#2ecc71"); 
     }
 
-    async function archive(i) { 
-        if(confirm("ARCHIVE?")) { 
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); 
-            location.reload(); 
-        } 
-    }
-    
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
-    function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
     init();
 </script>
 </body>
