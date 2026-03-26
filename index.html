@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V6.4 PLATINUM FINAL</title>
+    <title>ELITE CAR RENTAL V6.5 ULTRA</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -130,7 +130,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsWMa7igsrcvG_RC-phvqJS1aYndPIfS6YSa20W_WFIxdbPutzJeUxJxTdrv5gjRN2mg/exec"; 
+    const SCRIPT_URL = "YOUR_WEB_APP_URL"; 
     let currentData = [];
 
     async function init() {
@@ -145,25 +145,37 @@
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
+        
+        // IMPORTANT: Use the local browser time
         const now = new Date();
 
         for (let i = 1; i < currentData.length; i++) {
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // --- FORCED LOCAL OVERDUE LOGIC ---
+            // --- STRICT LOCAL OVERDUE LOGIC ---
             let isOverdue = false;
-            const targetDateRaw = row[10] ? row[10] : row[9]; 
+            // Column 10 is Extended Date, Column 9 is Date In
+            const targetDateValue = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
 
-            if (targetDateRaw && row[2]) {
-                const datePart = (targetDateRaw instanceof Date) 
-                    ? targetDateRaw.toISOString().split('T')[0] 
-                    : fmtDate(targetDateRaw);
-                const timePart = cleanTime(targetTimeStr);
+            if (targetDateValue && row[2]) {
+                // FORCE convert whatever comes from Sheets into a YYYY-MM-DD string
+                const dateString = fmtDate(targetDateValue);
+                const timeString = cleanTime(targetTimeStr);
                 
-                // Construct Date without "Z" to force Local Browser Time
-                const deadline = new Date(`${datePart}T${timePart}:00`);
+                // Construct a Date object using Local Time (No "Z")
+                // Format: YYYY, MM (0-indexed), DD, HH, mm
+                const dateParts = dateString.split('-');
+                const timeParts = timeString.split(':');
+                
+                const deadline = new Date(
+                    parseInt(dateParts[0]),
+                    parseInt(dateParts[1]) - 1,
+                    parseInt(dateParts[2]),
+                    parseInt(timeParts[0]),
+                    parseInt(timeParts[1])
+                );
 
                 if (!isNaN(deadline.getTime()) && deadline < now) {
                     isOverdue = true;
@@ -249,8 +261,10 @@
         const query = document.getElementById('uSearch').value.toLowerCase();
         const startVal = document.getElementById('dateStart').value;
         const endVal = document.getElementById('dateEnd').value;
+        
         let sD = startVal ? new Date(startVal + "T00:00:00") : null;
         let eD = endVal ? new Date(endVal + "T23:59:59") : null;
+        
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
             const history = await res.json();
@@ -296,21 +310,19 @@
         if(!v) return ""; 
         const d = (v instanceof Date) ? v : new Date(v);
         if(isNaN(d)) return "";
-        // Force YYYY-MM-DD
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return `${y}-${m}-${day}`;
     }
 
     function cleanTime(t) {
         if(!t) return "00:00";
-        const s = String(t);
-        if(s.includes('T')) return s.split('T')[1].substring(0, 5);
-        // Ensure HH:mm format
+        let s = String(t);
+        if(s.includes('T')) s = s.split('T')[1];
         const parts = s.split(':');
         if(parts.length >= 2) return parts[0].padStart(2,'0') + ":" + parts[1].padStart(2,'0');
-        return s.substring(0, 5);
+        return "00:00";
     }
 
     function autoDays(i) {
