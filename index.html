@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V5.5 PLATINUM</title>
+    <title>ELITE CAR RENTAL V6.0 FINAL</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -12,7 +12,7 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: #000; }
 
-        /* HEADER SECTION */
+        /* HEADER */
         .header-section { background: white; padding: 20px; border-bottom: 3px solid #ddd; }
         .logo-row { text-align: center; margin-bottom: 20px; }
         .main-logo { height: 160px; width: auto; }
@@ -29,7 +29,7 @@
         .divider { width: 4px; height: 30px; background-color: #ccc; border-radius: 2px; }
         .status-container { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 14px; }
 
-        /* TABLES STYLE */
+        /* TABLES */
         .table-wrapper { padding: 20px; overflow-x: auto; }
         table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); margin: 0 auto; }
         th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; font-size: 14px; }
@@ -37,12 +37,7 @@
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
 
-        /* RANKING STARS */
-        .star-select { 
-            color: #ffcc00; 
-            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; 
-            font-size: 22px; 
-        }
+        .star-select { color: #ffcc00; text-shadow: 1px 1px 0 #000; font-size: 22px; }
 
         /* ROW COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
@@ -51,28 +46,19 @@
         .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } 
 
         .col-orange { background-color: var(--light-orange) !important; }
-        .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-up { background: var(--blue); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
         /* SEARCH SECTION */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
         .search-box { background: white; padding: 15px; border-radius: 8px; color: black; min-width: 400px; display: flex; gap: 10px; align-items: center; }
         
-        .btn-search { 
-            background: var(--primary); color: white; border: none; padding: 12px 25px; 
-            border-radius: 4px; font-weight: bold; cursor: pointer;
-        }
-        .btn-search:hover { background: var(--orange); }
-
-        .btn-clear {
-            background: #e74c3c; color: white; border: none; padding: 8px 15px; 
-            border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px;
-        }
-        .btn-clear:hover { background: #c0392b; }
+        .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-clear { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; margin-left: 10px; }
 
         .search-status-bar { 
             display: flex; align-items: center; justify-content: center; gap: 10px; 
-            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin-left: auto; margin-right: auto;
+            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin: 0 auto 20px auto;
         }
         
         .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
@@ -112,13 +98,11 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
-    
     <div class="search-status-bar">
         <div id="search-dot" style="width:12px; height:12px; border-radius:50%; background:#aaa;"></div>
-        <span id="search-text" style="font-weight:bold; font-size:14px;">READY TO SEARCH</span>
+        <span id="search-text">READY TO SEARCH</span>
         <button class="btn-clear" onclick="clearSearch()">CLEAR RESULTS</button>
     </div>
-
     <div class="search-grid">
         <div class="search-box">
             <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1;">
@@ -131,7 +115,6 @@
             <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
         </div>
     </div>
-
     <div class="table-wrapper" style="background:transparent;">
         <table style="min-width:4400px; background: white; color: black;">
             <thead>
@@ -147,7 +130,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyKEsms14HcbEScL9e21U7EB5yXBu0zHny4WWxyCrVhwsBjntj8ZcsjdtoOxGdtSXOXw/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsWMa7igsrcvG_RC-phvqJS1aYndPIfS6YSa20W_WFIxdbPutzJeUxJxTdrv5gjRN2mg/exec"; 
     let currentData = [];
 
     async function init() {
@@ -230,16 +213,39 @@
         }
     }
 
+    async function handleFile(rowIdx, input) {
+        if (!input.files[0]) return;
+        updateStatus("UPLOADING...", "#3498db");
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64 = e.target.result.split(',')[1];
+            const res = await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "upload",
+                    row: rowIdx,
+                    filename: file.name,
+                    mimeType: file.type,
+                    base64: base64
+                })
+            });
+            const fileUrl = await res.text();
+            currentData[rowIdx][6] = fileUrl;
+            renderTable();
+            updateStatus("LIVE", "#2ecc71");
+        };
+        reader.readAsDataURL(file);
+    }
+
     async function runHistorySearch() {
         updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
+        const sD_in = document.getElementById('dateStart').value;
+        const eD_in = document.getElementById('dateEnd').value;
         
-        const sD_input = document.getElementById('dateStart').value;
-        const eD_input = document.getElementById('dateEnd').value;
-        
-        let searchStart = sD_input ? new Date(sD_input) : null;
-        let searchEnd = eD_input ? new Date(eD_input) : null;
-        if(searchEnd) searchEnd.setHours(23, 59, 59, 999);
+        let sD = sD_input ? new Date(sD_in + "T00:00:00") : null;
+        let eD = eD_input ? new Date(eD_in + "T23:59:59") : null;
 
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
@@ -247,30 +253,19 @@
             
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
-                
-                // 1. Text match (Universal Search)
                 const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
                 
-                // 2. TRUE OVERLAP LOGIC
-                let dateMatch = true;
-                if (searchStart && searchEnd) {
-                    const rowOut = new Date(row[7]);
-                    const rowIn = row[10] ? new Date(row[10]) : (row[9] ? new Date(row[9]) : null);
-                    
-                    if (rowOut && rowIn) {
-                        // Logic: A row overlaps if RowStart <= SearchEnd AND RowEnd >= SearchStart
-                        dateMatch = (rowOut <= searchEnd && rowIn >= searchStart);
-                    } else if (rowOut) {
-                        // Fallback if only Date Out exists
-                        dateMatch = (rowOut >= searchStart && rowOut <= searchEnd);
-                    }
-                }
+                const rowOut = row[7] ? new Date(fmtDate(row[7]) + "T00:00:00") : null;
+                const rowIn = (row[10]||row[9]) ? new Date(fmtDate(row[10]||row[9]) + "T23:59:59") : null;
                 
+                let dateMatch = true;
+                if (sD && eD && rowOut && rowIn) {
+                    dateMatch = (rowOut <= eD && rowIn >= sD);
+                }
                 return textMatch && dateMatch;
             });
 
-            const resBody = document.getElementById('resBody');
-            resBody.innerHTML = filtered.map(r => `
+            document.getElementById('resBody').innerHTML = filtered.map(r => `
                 <tr>
                     <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
                     <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
@@ -280,12 +275,11 @@
                     <td>${r[17]||''}</td>
                     <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
                     <td>${r[19]||''}</td>
-                    <td style="font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                    <td>${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
                 </tr>
             `).join('');
-
-            updateSearchStatus(filtered.length > 0 ? `${filtered.length} RESULTS FOUND` : "NO MATCH FOUND", filtered.length > 0 ? "#2ecc71" : "#e74c3c");
-        } catch (err) { updateSearchStatus("SEARCH FAILED", "#e74c3c"); }
+            updateSearchStatus(filtered.length > 0 ? filtered.length+" FOUND" : "NO MATCH", "#2ecc71");
+        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
     }
 
     function clearSearch() {
@@ -294,6 +288,14 @@
         document.getElementById('dateEnd').value = "";
         document.getElementById('resBody').innerHTML = "";
         updateSearchStatus("READY TO SEARCH", "#aaa");
+    }
+
+    function fmtDate(v) { 
+        if(!v) return ""; 
+        const d = new Date(v); 
+        if(isNaN(d)) return "";
+        // Forces local ISO date without timezone shifting
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
 
     function cleanTime(t) {
@@ -305,50 +307,43 @@
 
     function autoDays(i) {
         const dOut = new Date(currentData[i][7]);
-        const dTarget = currentData[i][10] ? new Date(currentData[i][10]) : new Date(currentData[i][9]);
-        if(!isNaN(dOut.getTime()) && !isNaN(dTarget.getTime())) {
-            const diff = Math.ceil((dTarget - dOut) / (1000 * 60 * 60 * 24));
+        const dIn = currentData[i][10] ? new Date(currentData[i][10]) : new Date(currentData[i][9]);
+        if(!isNaN(dOut.getTime()) && !isNaN(dIn.getTime())) {
+            const diff = Math.ceil((dIn - dOut) / (1000 * 60 * 60 * 24));
             currentData[i][12] = diff > 0 ? diff : 1;
             runMath(i);
         }
     }
 
-    function runMath(i, isManualRem = false) {
+    function runMath(i, manualRem = false) {
         const d = parseFloat(currentData[i][12]) || 0;
         const p = parseFloat(currentData[i][13]) || 0;
         const a = parseFloat(currentData[i][15]) || 0;
         const total = d * p;
-        let rem = isManualRem ? (parseFloat(document.getElementById(`rem-${i}`).value) || 0) : (total - a);
         currentData[i][14] = total;
-        currentData[i][16] = rem;
+        if(!manualRem) currentData[i][16] = total - a;
         sync(); renderTable(); 
     }
 
     function updateCell(r, c, v) { 
         currentData[r][c] = v; 
-        if(c == 9 || c == 10 || c == 11) renderTable(); 
+        if([7,9,10,11].includes(c)) renderTable(); 
         sync(); 
     }
 
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
-        const cleanData = currentData.map((row, idx) => {
-            if (idx === 0) return ["CAR","MATRICULE","CLIENT NAME","PHONE","ID CARD N°","DRIVING LICENCE","DOCS","DATE OUT","TIME OUT","DATE IN","EXTENDED DATE IN","TIME IN","DAYS","DAY PRICE","TOTAL","ADVANCE","REMAINING","STATE","RANKING","NOTES"];
-            return row.map((cell, colIdx) => ([7,8,9,10,11].includes(colIdx) && cell) ? String(cell).split('T')[0] : cell);
-        });
-        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: cleanData }) }); 
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); 
         updateStatus("LIVE", "#2ecc71"); 
     }
 
     async function archive(i) { 
         if(confirm("ARCHIVE?")) { 
-            const cleanedRow = currentData[i].map((cell, colIdx) => ([7,8,9,10,11].includes(colIdx) && cell) ? String(cell).split('T')[0] : cell);
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: cleanedRow }) }); 
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); 
             location.reload(); 
         } 
     }
     
-    function fmtDate(v) { if(!v || isNaN(new Date(v))) return ""; return new Date(v).toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
     init();
