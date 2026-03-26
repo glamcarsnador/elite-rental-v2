@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V2.0 - PRO</title>
+    <title>ELITE CAR RENTAL V3.0 PRO</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -30,7 +30,7 @@
 
         .col-orange { background-color: var(--light-orange) !important; }
         
-        /* CONTRASTED LIGHT ROW COLORS */
+        /* COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
         .row-partial { background-color: #fff9c4 !important; }  
         .row-active { background-color: #c8e6c9 !important; }   
@@ -100,7 +100,8 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwE16f2HONnuICTwvPmNNq8G-zx4I9lwk_NUQyBI1-9Z0i79FDVtnG2w6RxxcQnICQzoA/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4dNW-8KdgJG5gaQjBESaGwu7JADxMiL3trh4VTx1kZa__9WBseHu6J7ibI01gElwW1w/exec
+"; // <--- PASTE NEW URL HERE
     let currentData = [];
 
     async function init() {
@@ -121,10 +122,9 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // LOGIC: Overdue color trigger
             let isOverdue = false;
-            const targetDateStr = row[10] ? row[10] : row[9]; // Use Extension if exists, else Date In
-            const targetTimeStr = row[11] || "00:00"; // Time In
+            const targetDateStr = row[10] ? row[10] : row[9]; 
+            const targetTimeStr = row[11] || "00:00"; 
 
             if (targetDateStr && row[2]) {
                 const deadline = new Date(targetDateStr);
@@ -148,7 +148,7 @@
                 <td>
                     <button class="btn-up" onclick="document.getElementById('up-${i}').click()">UPLOAD</button>
                     <input type="file" id="up-${i}" hidden onchange="handleFile(${i}, this)">
-                    ${row[6] ? `<a href="${row[6]}" target="_blank" style="font-size:20px;">📄</a>` : ''}
+                    ${row[6] ? `<a href="${row[6]}" target="_blank" style="font-size:20px;text-decoration:none;">📄</a>` : ''}
                 </td>
                 <td><input type="date" value="${fmtDate(row[7])}" onchange="updateCell(${i},7,this.value); autoDays(${i})"></td>
                 <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
@@ -184,14 +184,33 @@
         }
     }
 
+    async function handleFile(i, input) {
+        if (!input.files[0]) return;
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            updateStatus("UPLOADING...", "#f39c12");
+            const res = await fetch(SCRIPT_URL, { 
+                method: "POST", 
+                body: JSON.stringify({ 
+                    action: "upload", 
+                    row: i, 
+                    filename: file.name, 
+                    mimeType: file.type, 
+                    base64: e.target.result.split(',')[1] 
+                }) 
+            });
+            const url = await res.text();
+            currentData[i][6] = url; 
+            renderTable();
+            updateStatus("LIVE", "#2ecc71");
+        };
+        reader.readAsDataURL(file);
+    }
+
     function autoDays(i) {
         const dOut = new Date(currentData[i][7]);
-        const dInNormal = new Date(currentData[i][9]);
-        const dInExtended = new Date(currentData[i][10]);
-        
-        // Use extended date if available, otherwise normal date in
-        const dTarget = (currentData[i][10]) ? dInExtended : dInNormal;
-
+        const dTarget = currentData[i][10] ? new Date(currentData[i][10]) : new Date(currentData[i][9]);
         if(!isNaN(dOut.getTime()) && !isNaN(dTarget.getTime())) {
             const diff = Math.ceil((dTarget - dOut) / (1000 * 60 * 60 * 24));
             currentData[i][12] = diff > 0 ? diff : 1;
@@ -239,7 +258,7 @@
             if(idx === 0) return false;
             const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
             const carOut = new Date(row[7]); 
-            const carIn = row[10] ? new Date(row[10]) : new Date(row[9]); // Search logic includes extension
+            const carIn = row[10] ? new Date(row[10]) : new Date(row[9]);
             const dateMatch = (isNaN(sD.getTime()) || isNaN(eD.getTime())) ? true : (carOut <= eD && carIn >= sD);
             return textMatch && dateMatch;
         });
