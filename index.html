@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V6.1 FINAL</title>
+    <title>ELITE CAR RENTAL V6.2 PLATINUM</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -48,7 +48,7 @@
         .col-orange { background-color: var(--light-orange) !important; }
         .btn-up { background: var(--blue); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
-        /* SEARCH SECTION */
+        /* CONSOLE & SEARCH */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
         .search-box { background: white; padding: 15px; border-radius: 8px; color: black; min-width: 400px; display: flex; gap: 10px; align-items: center; }
@@ -130,7 +130,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzsWMa7igsrcvG_RC-phvqJS1aYndPIfS6YSa20W_WFIxdbPutzJeUxJxTdrv5gjRN2mg/exec"; 
+    const SCRIPT_URL = "YOUR_WEB_APP_URL"; 
     let currentData = [];
 
     async function init() {
@@ -151,15 +151,19 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
+            // --- OVERDUE LOGIC FIX ---
             let isOverdue = false;
             const targetDateStr = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
 
             if (targetDateStr && row[2]) {
-                const deadline = new Date(targetDateStr);
-                const [hrs, mins] = targetTimeStr.split(':');
-                deadline.setHours(parseInt(hrs), parseInt(mins), 0, 0);
-                if (deadline < now) isOverdue = true;
+                const datePart = fmtDate(targetDateStr); 
+                const timePart = cleanTime(targetTimeStr);
+                const deadline = new Date(`${datePart}T${timePart}:00`);
+
+                if (!isNaN(deadline.getTime()) && deadline < now) {
+                    isOverdue = true;
+                }
             }
 
             if (isOverdue) tr.className = "row-overdue";
@@ -224,11 +228,7 @@
                 const res = await fetch(SCRIPT_URL, {
                     method: "POST",
                     body: JSON.stringify({
-                        action: "upload",
-                        row: rowIdx,
-                        filename: file.name,
-                        mimeType: file.type,
-                        base64: base64
+                        action: "upload", row: rowIdx, filename: file.name, mimeType: file.type, base64: base64
                     })
                 });
                 const fileUrl = await res.text();
@@ -243,38 +243,29 @@
     async function runHistorySearch() {
         updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
-        const startInput = document.getElementById('dateStart').value;
-        const endInput = document.getElementById('dateEnd').value;
+        const startVal = document.getElementById('dateStart').value;
+        const endVal = document.getElementById('dateEnd').value;
         
-        // Force T00:00:00 to avoid timezone shifts
-        let searchS = startInput ? new Date(startInput + "T00:00:00") : null;
-        let searchE = endInput ? new Date(endInput + "T23:59:59") : null;
+        let sD = startVal ? new Date(startVal + "T00:00:00") : null;
+        let eD = endVal ? new Date(endVal + "T23:59:59") : null;
 
         try {
-            const res = await fetch(SCRIPT_URL, { 
-                method: "POST", 
-                body: JSON.stringify({ action: "getHistory" }) 
-            });
+            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
             const history = await res.json();
             
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
-                
                 const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
                 
-                // Get row dates formatted as local strings first to ensure consistency
                 const rowOutStr = fmtDate(row[7]);
                 const rowInStr = fmtDate(row[10] || row[9]);
-                
                 const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
                 const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
                 
                 let dateMatch = true;
-                if (searchS && searchE && rowOut && rowIn) {
-                    // Logic: Row overlaps if RowOut <= SearchEnd AND RowIn >= SearchStart
-                    dateMatch = (rowOut <= searchE && rowIn >= searchS);
+                if (sD && eD && rowOut && rowIn) {
+                    dateMatch = (rowOut <= eD && rowIn >= sD);
                 }
-                
                 return textMatch && dateMatch;
             });
 
@@ -288,15 +279,11 @@
                     <td>${r[17]||''}</td>
                     <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
                     <td>${r[19]||''}</td>
-                    <td>${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                    <td style="font-size:18px; font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
                 </tr>
             `).join('');
-
             updateSearchStatus(filtered.length > 0 ? filtered.length + " FOUND" : "NO MATCH", "#2ecc71");
-        } catch (err) { 
-            console.error(err);
-            updateSearchStatus("ERROR", "#e74c3c"); 
-        }
+        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
     }
 
     function clearSearch() {
@@ -315,15 +302,15 @@
     }
 
     function cleanTime(t) {
-        if(!t) return "";
+        if(!t) return "00:00";
         const s = String(t);
         if(s.includes('T')) return s.split('T')[1].substring(0, 5);
         return s.substring(0, 5);
     }
 
     function autoDays(i) {
-        const dOut = new Date(currentData[i][7]);
-        const dIn = currentData[i][10] ? new Date(currentData[i][10]) : new Date(currentData[i][9]);
+        const dOut = new Date(fmtDate(currentData[i][7]) + "T12:00:00");
+        const dIn = new Date(fmtDate(currentData[i][10] || currentData[i][9]) + "T12:00:00");
         if(!isNaN(dOut.getTime()) && !isNaN(dIn.getTime())) {
             const diff = Math.ceil((dIn - dOut) / (1000 * 60 * 60 * 24));
             currentData[i][12] = diff > 0 ? diff : 1;
@@ -343,7 +330,7 @@
 
     function updateCell(r, c, v) { 
         currentData[r][c] = v; 
-        if([7,9,10,11].includes(c)) renderTable(); 
+        if([7,9,10,11,17].includes(c)) renderTable(); 
         sync(); 
     }
 
