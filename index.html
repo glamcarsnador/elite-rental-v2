@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V4.5 PRO</title>
+    <title>ELITE CAR RENTAL V5.0 PRO</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -33,7 +33,7 @@
         .table-wrapper { padding: 20px; overflow-x: auto; }
         table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); margin: 0 auto; }
         th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; font-size: 14px; }
-        td { border: 2px solid var(--border-color); padding: 0; text-align: center; position: relative; height: 50px; }
+        td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 50px; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
 
@@ -69,6 +69,8 @@
             background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px;
             margin-bottom: 20px; font-weight: bold; font-size: 12px;
         }
+        
+        .doc-link { text-decoration: none; font-size: 22px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -122,7 +124,7 @@
         </div>
     </div>
     <div class="table-wrapper" style="background:transparent;">
-        <table style="min-width:4400px;">
+        <table style="min-width:4400px; background: white; color: black;">
             <thead>
                 <tr>
                     <th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th>
@@ -130,7 +132,7 @@
                     <th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th><th>STATE</th><th>RANKING</th><th>NOTES</th><th>ARCHIVED ON</th>
                 </tr>
             </thead>
-            <tbody id="resBody" style="background:white; color:black;"></tbody>
+            <tbody id="resBody"></tbody>
         </table>
     </div>
 </div>
@@ -183,13 +185,13 @@
                 <td>
                     <button class="btn-up" onclick="document.getElementById('up-${i}').click()">UPLOAD</button>
                     <input type="file" id="up-${i}" hidden onchange="handleFile(${i}, this)">
-                    ${row[6] ? `<a href="${row[6]}" target="_blank" style="font-size:20px;text-decoration:none;">📄</a>` : ''}
+                    ${row[6] ? `<a href="${row[6]}" target="_blank" class="doc-link">📄</a>` : ''}
                 </td>
                 <td><input type="date" value="${fmtDate(row[7])}" onchange="updateCell(${i},7,this.value); autoDays(${i})"></td>
-                <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
+                <td><input type="time" value="${cleanTime(row[8])}" onchange="updateCell(${i},8,this.value)"></td>
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 <td><input type="date" value="${fmtDate(row[10])}" onchange="updateCell(${i},10,this.value); autoDays(${i})"></td>
-                <td><input type="time" value="${row[11]||''}" onchange="updateCell(${i},11,this.value); renderTable()"></td>
+                <td><input type="time" value="${cleanTime(row[11])}" onchange="updateCell(${i},11,this.value); renderTable()"></td>
                 <td><input type="number" value="${row[12]||''}" readonly></td>
                 <td><input type="number" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" value="${row[14]||''}" readonly></td>
@@ -222,8 +224,11 @@
     async function runHistorySearch() {
         updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
-        const sD = new Date(document.getElementById('dateStart').value);
-        const eD = new Date(document.getElementById('dateEnd').value);
+        
+        // DATE LOGIC FIX: Set end date to the end of the day (23:59:59)
+        const sD = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value) : null;
+        let eD = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value) : null;
+        if(eD) eD.setHours(23, 59, 59, 999);
 
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
@@ -232,19 +237,26 @@
             const filtered = history.filter((row, idx) => {
                 if(idx === 0) return false;
                 const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
+                
                 const carOut = new Date(row[7]); 
                 const carIn = row[10] ? new Date(row[10]) : new Date(row[9]);
-                const dateMatch = (isNaN(sD.getTime()) || isNaN(eD.getTime())) ? true : (carOut <= eD && carIn >= sD);
+                
+                // If either date falls within the range
+                const dateMatch = (!sD || !eD) ? true : (
+                    (carOut >= sD && carOut <= eD) || 
+                    (carIn >= sD && carIn <= eD) ||
+                    (carOut <= sD && carIn >= eD)
+                );
                 return textMatch && dateMatch;
             });
 
             const resBody = document.getElementById('resBody');
             resBody.innerHTML = filtered.map(r => `
-                <tr style="height:50px;">
+                <tr>
                     <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
                     <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
-                    <td>${r[6] ? '📄' : ''}</td>
-                    <td>${fmtDate(r[7])}</td><td>${r[8]||''}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${r[11]||''}</td>
+                    <td>${r[6] ? `<a href="${r[6]}" target="_blank" class="doc-link">📄</a>` : ''}</td>
+                    <td>${fmtDate(r[7])}</td><td>${cleanTime(r[8])}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${cleanTime(r[11])}</td>
                     <td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td>
                     <td>${r[17]||''}</td>
                     <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
@@ -253,12 +265,15 @@
                 </tr>
             `).join('');
 
-            if(filtered.length > 0) updateSearchStatus(`${filtered.length} RESULTS FOUND`, "#2ecc71");
-            else updateSearchStatus("NO MATCH FOUND", "#e74c3c");
+            updateSearchStatus(filtered.length > 0 ? `${filtered.length} RESULTS FOUND` : "NO MATCH FOUND", filtered.length > 0 ? "#2ecc71" : "#e74c3c");
+        } catch (err) { updateSearchStatus("SEARCH FAILED", "#e74c3c"); }
+    }
 
-        } catch (err) {
-            updateSearchStatus("SEARCH FAILED", "#e74c3c");
-        }
+    function cleanTime(t) {
+        if(!t) return "";
+        const s = String(t);
+        if(s.includes('T')) return s.split('T')[1].substring(0, 5); // Extracts HH:MM from ISO string
+        return s.substring(0, 5);
     }
 
     function autoDays(i) {
@@ -305,6 +320,7 @@
             location.reload(); 
         } 
     }
+    
     function fmtDate(v) { if(!v || isNaN(new Date(v))) return ""; return new Date(v).toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
