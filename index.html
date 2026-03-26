@@ -36,12 +36,12 @@
 
         .col-orange { background-color: var(--light-orange) !important; }
         
-        /* ROW COLORS */
-        .row-reserved { background: #d1ecf1 !important; }
-        .row-partial { background: #fff3cd !important; }
-        .row-active { background: #d4edda !important; }
-        .row-overdue { background: var(--red) !important; color: white !important; }
-        .row-overdue input, .row-overdue select { color: white !important; }
+        /* CONTRASTED LIGHT ROW COLORS */
+        .row-reserved { background-color: #b3e5fc !important; } /* Bright Light Blue */
+        .row-partial { background-color: #fff9c4 !important; }  /* Bright Light Yellow */
+        .row-active { background-color: #c8e6c9 !important; }   /* Bright Light Green */
+        .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } /* Soft Red / Dark Red Text */
+        .row-overdue input, .row-overdue select { color: #b71c1c !important; }
 
         /* BUTTONS */
         .calc-btn { cursor: pointer; font-size: 18px; position: absolute; right: 8px; top: 25%; opacity: 0.5; z-index: 10; color: #333; }
@@ -159,9 +159,9 @@
                 <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 
-                <td><input type="number" id="days-${i}" value="${row[10]||''}" onchange="updateCell(${i},10,this.value); runMath(${i})"><span class="calc-btn" onclick="autoDays(${i})">🔄</span></td>
+                <td><input type="number" id="days-${i}" value="${row[10]||''}" readonly></td>
                 <td><input type="number" id="prc-${i}" value="${row[11]||''}" onchange="updateCell(${i},11,this.value); runMath(${i})"></td>
-                <td><input type="number" id="tot-${i}" value="${row[12]||''}" onchange="updateCell(${i},12,this.value); runMath(${i}, true)"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
+                <td><input type="number" id="tot-${i}" value="${row[12]||''}" readonly></td>
                 <td><input type="number" id="adv-${i}" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" id="rem-${i}" value="${row[14]||''}" onchange="updateCell(${i},14,this.value); runMath(${i}, true)"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
                 
@@ -198,27 +198,21 @@
         }
     }
 
-    function runMath(i, isManual = false) {
-        const d = parseFloat(document.getElementById(`days-${i}`).value) || 0;
-        const p = parseFloat(document.getElementById(`prc-${i}`).value) || 0;
-        const a = parseFloat(document.getElementById(`adv-${i}`).value) || 0;
+    function runMath(i, isManualRem = false) {
+        const d = parseFloat(currentData[i][10]) || 0;
+        const p = parseFloat(currentData[i][11]) || 0;
+        const a = parseFloat(currentData[i][13]) || 0;
         
-        let total, rem;
+        const total = d * p;
+        let rem;
 
-        if (isManual) {
-            // If the user typed it, use exactly what is in the box
-            total = parseFloat(document.getElementById(`tot-${i}`).value) || 0;
+        if (isManualRem) {
             rem = parseFloat(document.getElementById(`rem-${i}`).value) || 0;
         } else {
-            // Otherwise, auto-calculate
-            total = d * p;
             rem = total - a;
         }
 
-        currentData[i][10] = d;
-        currentData[i][11] = p;
         currentData[i][12] = total;
-        currentData[i][13] = a;
         currentData[i][14] = rem;
 
         sync();
@@ -233,12 +227,16 @@
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
         
-        const cleanData = currentData.map(row => row.map((cell, idx) => {
-            if ((idx === 7 || idx === 8 || idx === 9) && cell) {
-                return String(cell).split('T')[0]; 
-            }
-            return cell;
-        }));
+        // FIX: Only clean rows 1 and below. Keep row 0 (Headers) exactly as they are.
+        const cleanData = currentData.map((row, rowIdx) => {
+            if (rowIdx === 0) return row; // SKIP HEADERS
+            return row.map((cell, colIdx) => {
+                if ((colIdx === 7 || colIdx === 8 || colIdx === 9) && cell) {
+                    return String(cell).split('T')[0]; 
+                }
+                return cell;
+            });
+        });
 
         await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: cleanData }) }); 
         updateStatus("LIVE", "#2ecc71"); 
