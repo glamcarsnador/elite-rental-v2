@@ -27,20 +27,20 @@
         th { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 16px; border: 1px solid #fff; text-transform: uppercase; }
         td { border: 2px solid var(--border-color); padding: 0; text-align: center; position: relative; }
         
-        /* INPUTS & CENTERING */
+        /* INPUTS */
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
         
-        /* HIDE ARROWS (SPINNERS) */
+        /* HIDE ARROWS */
         input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
 
         .col-orange { background-color: var(--light-orange) !important; }
         
         /* CONTRASTED LIGHT ROW COLORS */
-        .row-reserved { background-color: #b3e5fc !important; } /* Bright Light Blue */
-        .row-partial { background-color: #fff9c4 !important; }  /* Bright Light Yellow */
-        .row-active { background-color: #c8e6c9 !important; }   /* Bright Light Green */
-        .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } /* Soft Red / Dark Red Text */
+        .row-reserved { background-color: #b3e5fc !important; } 
+        .row-partial { background-color: #fff9c4 !important; }  
+        .row-active { background-color: #c8e6c9 !important; }   
+        .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } 
         .row-overdue input, .row-overdue select { color: #b71c1c !important; }
 
         /* BUTTONS */
@@ -48,7 +48,6 @@
         .calc-btn:hover { opacity: 1; color: var(--blue); transform: scale(1.2); }
         .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         
-        /* SEARCH CONSOLE */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
         .search-box { background: white; padding: 20px; border-radius: 8px; color: black; min-width: 300px; }
@@ -108,9 +107,7 @@
 </div>
 
 <script>
-    // 1. PASTE YOUR WEB APP URL HERE
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwLEJnHvqpsdpmwm-d9xfVpATWNpSU4CGoH9GP_w2IGvwwALgHZ3dg96CDRAv89fHvvA/exec"; 
-
     let currentData = [];
 
     async function init() {
@@ -131,11 +128,16 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            const dateIn = new Date(row[9]);
-            const timeParts = (row[8] || "00:00").split(":");
-            dateIn.setHours(parseInt(timeParts[0] || 0), parseInt(timeParts[1] || 0));
+            let isOverdue = false;
+            if (row[9]) {
+                const dateIn = new Date(row[9]);
+                const timeStr = row[8] || "00:00";
+                const [hrs, mins] = timeStr.split(':');
+                dateIn.setHours(parseInt(hrs), parseInt(mins), 0, 0);
+                if (row[2] && dateIn < now) isOverdue = true;
+            }
 
-            if (row[2] && dateIn < now) {
+            if (isOverdue) {
                 tr.className = "row-overdue";
             } else {
                 if(row[15] === "RESERVED") tr.className = "row-reserved";
@@ -156,7 +158,7 @@
                     ${row[6] ? `<a href="${row[6]}" target="_blank" style="font-size:20px;text-decoration:none;">📄</a>` : ''}
                 </td>
                 <td><input type="date" value="${fmtDate(row[7])}" onchange="updateCell(${i},7,this.value); autoDays(${i})"></td>
-                <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value)"></td>
+                <td><input type="time" value="${row[8]||''}" onchange="updateCell(${i},8,this.value); renderTable()"></td>
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 
                 <td><input type="number" id="days-${i}" value="${row[10]||''}" readonly></td>
@@ -202,42 +204,31 @@
         const d = parseFloat(currentData[i][10]) || 0;
         const p = parseFloat(currentData[i][11]) || 0;
         const a = parseFloat(currentData[i][13]) || 0;
-        
         const total = d * p;
-        let rem;
-
-        if (isManualRem) {
-            rem = parseFloat(document.getElementById(`rem-${i}`).value) || 0;
-        } else {
-            rem = total - a;
-        }
-
+        let rem = isManualRem ? (parseFloat(document.getElementById(`rem-${i}`).value) || 0) : (total - a);
         currentData[i][12] = total;
         currentData[i][14] = rem;
-
         sync();
         renderTable(); 
     }
 
-    function updateCell(r, c, v) { 
-        currentData[r][c] = v; 
-        sync(); 
+    function updateCell(r, c, v) { currentData[r][c] = v; sync(); }
+
+    function cleanRowForSheet(row) {
+        return row.map((cell, colIdx) => {
+            if ((colIdx === 7 || colIdx === 8 || colIdx === 9) && cell) {
+                return String(cell).split('T')[0];
+            }
+            return cell;
+        });
     }
 
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
-        
-        // FIX: Only clean rows 1 and below. Keep row 0 (Headers) exactly as they are.
         const cleanData = currentData.map((row, rowIdx) => {
-            if (rowIdx === 0) return row; // SKIP HEADERS
-            return row.map((cell, colIdx) => {
-                if ((colIdx === 7 || colIdx === 8 || colIdx === 9) && cell) {
-                    return String(cell).split('T')[0]; 
-                }
-                return cell;
-            });
+            if (rowIdx === 0) return ["CAR","MATRICULE","CLIENT NAME","PHONE","ID CARD N°","DRIVING LICENCE","DOCS","DATE OUT","TIME","DATE IN","DAYS","DAY PRICE","TOTAL","ADVANCE","REMAINING","STATE","RANKING"]; 
+            return cleanRowForSheet(row);
         });
-
         await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: cleanData }) }); 
         updateStatus("LIVE", "#2ecc71"); 
     }
@@ -271,7 +262,15 @@
         document.getElementById('resBody').innerHTML = filtered.map(r => `<tr><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmtDate(r[7])}</td><td>${fmtDate(r[9])}</td><td>${r[12]}</td><td>${r[15]}</td></tr>`).join('');
     }
 
-    async function archive(i) { if(confirm("ARCHIVE?")) { updateStatus("ARCHIVING...", "#f39c12"); await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); location.reload(); } }
+    async function archive(i) { 
+        if(confirm("ARCHIVE?")) { 
+            updateStatus("ARCHIVING...", "#f39c12"); 
+            const cleanedRow = cleanRowForSheet(currentData[i]); // FIX: Clean before archiving
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: cleanedRow }) }); 
+            location.reload(); 
+        } 
+    }
+    
     function fmtDate(v) { if(!v) return ""; const d = new Date(v); return isNaN(d) ? "" : d.toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     init();
