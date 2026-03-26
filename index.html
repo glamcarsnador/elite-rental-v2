@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V7.6 ATOMIC SYNC</title>
+    <title>ELITE CAR RENTAL V7.7 ATOMIC SYNC</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -12,7 +12,7 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: #000; }
 
-        /* HEADER & SYNC BAR */
+        /* HEADER & ATOMIC CLOCK */
         .header-section { background: white; padding: 20px; border-bottom: 3px solid #ddd; }
         .logo-row { text-align: center; margin-bottom: 20px; }
         .main-logo { height: 160px; width: auto; }
@@ -23,10 +23,9 @@
             border: 1px solid #eee; border-radius: 8px;
         }
 
-        /* FIXED CLOCK STYLING (WHITE BACKGROUND) */
         .clock-display {
-            background: white; color: #333; padding: 5px 20px; border-radius: 8px;
-            font-family: 'Segoe UI', sans-serif; font-weight: bold; border: 1px solid #ddd;
+            background: white; color: #333; padding: 5px 25px; border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif; font-weight: bold; border: 2px solid #eee;
             display: flex; flex-direction: column; align-items: center; min-width: 220px;
         }
         
@@ -39,37 +38,26 @@
         .table-wrapper { padding: 20px; overflow-x: auto; }
         table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); margin: 0 auto; }
         th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; font-size: 14px; }
-        td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 60px; font-size: 18px; font-weight: 700; }
+        td { border: 2px solid var(--border-color); padding: 5px; text-align: center; position: relative; height: 60px; font-size: 18px; font-weight: 700; transition: background 0.3s; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
 
-        /* ROW COLORS */
+        /* FIXED ROW COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
         .row-partial { background-color: #fff9c4 !important; }  
         .row-active { background-color: #c8e6c9 !important; }   
         .row-overdue { background-color: var(--red) !important; color: var(--dark-red) !important; } 
 
-        /* CONSOLE & SEARCH GRID */
+        .col-orange { background-color: var(--light-orange) !important; }
+        .btn-up { background: var(--blue); color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* SEARCH CONSOLE */
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
-        .search-grid { 
-            display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; 
-            max-width: 1200px; margin: 0 auto 10px auto; 
-        }
-        .search-box { 
-            background: white; padding: 15px; border-radius: 8px; color: black; 
-            display: flex; gap: 10px; align-items: center; flex: 1; min-width: 300px;
-        }
-
-        /* RESTORED SEARCH STATUS BAR */
-        .search-status-bar { 
-            display: flex; align-items: center; justify-content: center; gap: 10px; 
-            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin: 0 auto 20px auto;
-        }
-
+        .search-status-bar { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin: 0 auto 20px auto; }
+        .search-grid { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 10px auto; }
+        .search-box { background: white; padding: 15px; border-radius: 8px; color: black; display: flex; gap: 10px; align-items: center; flex: 1; min-width: 300px; }
         .btn-search { background: var(--blue); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-clear-red { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; }
-
-        .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -78,9 +66,9 @@
     <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
         <div class="clock-display">
-            <div style="font-size: 11px; color: #777; margin-bottom: 2px; font-weight: 900;">MOROCCO TIME <span id="clock-status">🌐</span></div>
-            <div id="live-date" style="color: #2c3e50; font-size: 14px;">01 JAN 2026</div>
-            <div id="live-clock" style="font-size: 22px; color: #e67e22;">00:00:00</div>
+            <div style="font-size: 11px; color: #777; margin-bottom: 2px; font-weight: 900;">MOROCCO ATOMIC TIME <span id="clock-status">🌐</span></div>
+            <div id="live-date" style="color: #2c3e50; font-size: 15px;">01 JAN 2026</div>
+            <div id="live-clock" style="font-size: 24px; color: #e67e22;">00:00:00</div>
         </div>
 
         <div class="legend-bar">
@@ -112,56 +100,41 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
-    
     <div class="search-status-bar">
         <div id="search-dot" style="width:12px; height:12px; border-radius:50%; background:#aaa;"></div>
         <span id="search-text">READY TO SEARCH</span>
-        <button class="btn-clear-red" onclick="clearSearch()">CLEAR RESULTS</button>
+        <button class="btn-clear-red" onclick="clearSearch()">RESET</button>
     </div>
-
     <div class="search-grid">
+        <div class="search-box"><input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1; height:40px;"></div>
         <div class="search-box">
-            <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1; height: 40px;">
+            <input type="date" id="dateStart" style="border:1px solid #ccc; height:40px;">
+            <span style="color:gray; font-size:12px;">TO</span>
+            <input type="date" id="dateEnd" style="border:1px solid #ccc; height:40px;">
         </div>
-        <div class="search-box">
-            <input type="date" id="dateStart" style="border:1px solid #ccc; height: 40px;">
-            <span>TO</span>
-            <input type="date" id="dateEnd" style="border:1px solid #ccc; height: 40px;">
-        </div>
-        <button class="btn-search" onclick="runHistorySearch()">RUN SEARCH</button>
+        <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
     </div>
-    
-    <div class="table-wrapper" style="background:transparent;">
-        <table style="min-width:4400px; background: white; color: black;">
-            <thead>
-                <tr>
-                    <th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th>
-                    <th>DATE OUT</th><th>TIME OUT</th><th>DATE IN</th><th>EXTENDED DATE IN</th><th>TIME IN</th><th>DAYS</th><th>DAY PRICE</th>
-                    <th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th><th>STATE</th><th>RANKING</th><th>NOTES</th><th>ARCHIVED ON</th>
-                </tr>
-            </thead>
-            <tbody id="resBody"></tbody>
-        </table>
-    </div>
+    <div class="table-wrapper" style="background:transparent;"><table id="historyTable" style="min-width:4400px; background:white; color:black;"><thead><tr><th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th><th>DATE OUT</th><th>TIME OUT</th><th>DATE IN</th><th>EXTENDED DATE IN</th><th>TIME IN</th><th>DAYS</th><th>DAY PRICE</th><th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th><th>STATE</th><th>RANKING</th><th>NOTES</th><th>ARCHIVED ON</th></tr></thead><tbody id="resBody"></tbody></table></div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxVgoL7ERJ6J6oR1B7xlp6Xud549mUmWRm_GMbulFJ7P-mqJ-kaR7kJ59Do5hLTI7e83g/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxUapGb5OTXCwU52dkmR_bW1k_zRhauYKS-jLRRXi4UW2tRBjPyaCYsVGPpEi_Ne6DcTQ/exec"; 
     let currentData = [];
     let officialTime = new Date();
     let isClockOfficial = false;
 
+    // --- DUAL API ATOMIC SYNC ---
     async function syncGlobalTime() {
         try {
             const res = await fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca');
-            const data = await res.json();
-            officialTime = new Date(data.datetime);
+            const d = await res.json();
+            officialTime = new Date(d.datetime);
             isClockOfficial = true;
         } catch (e) {
             try {
                 const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=Africa/Casablanca');
-                const data = await res.json();
-                officialTime = new Date(data.dateTime);
+                const d = await res.json();
+                officialTime = new Date(d.dateTime);
                 isClockOfficial = true;
             } catch (e2) {
                 officialTime = new Date();
@@ -170,19 +143,46 @@
         }
     }
 
-    // CLOCK UPDATE LOOP (Fixed focus bug)
+    // SILENT COLOR ENGINE (Updates every second without breaking popups)
     setInterval(() => {
         officialTime.setSeconds(officialTime.getSeconds() + 1);
         
-        // Update the visual clock elements ONLY
+        // Update Clock UI
         document.getElementById('live-date').innerText = officialTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
         document.getElementById('live-clock').innerText = officialTime.toLocaleTimeString('fr-FR');
         document.getElementById('clock-status').innerText = isClockOfficial ? "🌐" : "⚠️";
 
-        // Logic check: only update row colors if no input is currently being touched
-        const activeEl = document.activeElement.tagName;
-        if (activeEl !== 'INPUT' && activeEl !== 'SELECT') {
-            checkOverdueStatus(); 
+        // Update Row Colors SILENTLY
+        for (let i = 1; i < currentData.length; i++) {
+            const row = currentData[i];
+            const tr = document.getElementById(`row-${i}`);
+            if (!tr) continue;
+
+            let finalClass = "";
+            const targetDate = row[10] ? row[10] : row[9];
+            const targetTime = row[11] || "00:00";
+
+            // Check Overdue logic strictly against Atomic Time
+            if (targetDate && row[2]) {
+                const dStr = fmtDate(targetDate);
+                const tStr = cleanTime(targetTime);
+                const [y, m, day] = dStr.split('-');
+                const [h, min] = tStr.split(':');
+                const deadline = new Date(y, m-1, day, h, min);
+                
+                if (!isNaN(deadline.getTime()) && deadline < officialTime) {
+                    finalClass = "row-overdue";
+                }
+            }
+
+            // If not overdue, apply status-based colors
+            if (!finalClass) {
+                if (row[17] === "RESERVED") finalClass = "row-reserved";
+                else if (row[17] === "PARTIAL") finalClass = "row-partial";
+                else if (row[17] === "ACTIVE/PAID") finalClass = "row-active";
+            }
+
+            if (tr.className !== finalClass) tr.className = finalClass;
         }
     }, 1000);
 
@@ -202,11 +202,7 @@
         for (let i = 1; i < currentData.length; i++) {
             const row = currentData[i];
             const tr = document.createElement('tr');
-            tr.id = `row-${i}`; // ID for dynamic color updates
-            
-            // Initial color set
-            updateRowColor(tr, row);
-
+            tr.id = `row-${i}`;
             tr.innerHTML = `
                 <td class="col-orange"><input value="${row[0]||''}" onchange="updateCell(${i},0,this.value)"></td>
                 <td class="col-orange"><input value="${row[1]||''}" onchange="updateCell(${i},1,this.value)"></td>
@@ -217,7 +213,7 @@
                 <td>
                     <button class="btn-up" onclick="document.getElementById('up-${i}').click()">UPLOAD</button>
                     <input type="file" id="up-${i}" hidden onchange="handleFile(${i}, this)">
-                    ${row[6] ? `<a href="${row[6]}" target="_blank" class="doc-link">📄</a>` : ''}
+                    ${row[6] ? `<a href="${row[6]}" target="_blank" style="text-decoration:none; font-size:24px;">📄</a>` : ''}
                 </td>
                 <td><input type="date" value="${fmtDate(row[7])}" onchange="updateCell(${i},7,this.value); autoDays(${i})"></td>
                 <td><input type="time" value="${cleanTime(row[8])}" onchange="updateCell(${i},8,this.value)"></td>
@@ -228,7 +224,7 @@
                 <td><input type="number" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" value="${row[14]||''}" readonly></td>
                 <td><input type="number" value="${row[15]||''}" onchange="updateCell(${i},15,this.value); runMath(${i})"></td>
-                <td><input type="number" id="rem-${i}" value="${row[16]||''}" onchange="updateCell(${i},16,this.value); runMath(${i}, true)"><span onclick="runMath(${i})" style="cursor:pointer;position:absolute;right:5px;top:25%;">🔄</span></td>
+                <td><input type="number" value="${row[16]||''}" onchange="updateCell(${i},16,this.value); runMath(${i}, true)"></td>
                 <td>
                     <select onchange="updateCell(${i},17,this.value);">
                         <option value="" ${row[17]==''?'selected':''}>-</option>
@@ -238,7 +234,7 @@
                     </select>
                 </td>
                 <td>
-                    <select class="star-select" onchange="updateCell(${i},18,this.value)">
+                    <select onchange="updateCell(${i},18,this.value)" style="color:#ffcc00; font-size:22px;">
                         <option value="1" ${row[18]=='1'?'selected':''}>★</option>
                         <option value="2" ${row[18]=='2'?'selected':''}>★★</option>
                         <option value="3" ${row[18]=='3'?'selected':''}>★★★</option>
@@ -246,103 +242,33 @@
                         <option value="5" ${row[18]=='5'?'selected':''}>★★★★★</option>
                     </select>
                 </td>
-                <td><input value="${row[19]||''}" onchange="updateCell(${i},19,this.value)" placeholder="..."></td>
+                <td><input value="${row[19]||''}" onchange="updateCell(${i},19,this.value)"></td>
                 <td><button onclick="archive(${i})" style="background:var(--primary); color:white; border:none; padding:10px; cursor:pointer; font-weight:bold; border-radius:4px;">FINISH</button></td>
             `;
             tbody.appendChild(tr);
         }
     }
 
-    // Logic to update colors without redrawing the whole table
-    function checkOverdueStatus() {
-        for (let i = 1; i < currentData.length; i++) {
-            const tr = document.getElementById(`row-${i}`);
-            if (tr) updateRowColor(tr, currentData[i]);
-        }
-    }
-
-    function updateRowColor(tr, row) {
-        let isOverdue = false;
-        const targetDateValue = row[10] ? row[10] : row[9]; 
-        const targetTimeStr = row[11] || "00:00"; 
-        if (targetDateValue && row[2]) {
-            const dateStr = fmtDate(targetDateValue);
-            const timeStr = cleanTime(targetTimeStr);
-            const dParts = dateStr.split('-');
-            const tParts = timeStr.split(':');
-            const deadline = new Date(parseInt(dParts[0]), parseInt(dParts[1])-1, parseInt(dParts[2]), parseInt(tParts[0]), parseInt(tParts[1]));
-            if (!isNaN(deadline.getTime()) && deadline < officialTime) isOverdue = true;
-        }
-        if (isOverdue) tr.className = "row-overdue";
-        else if(row[17] === "RESERVED") tr.className = "row-reserved";
-        else if(row[17] === "PARTIAL") tr.className = "row-partial";
-        else if(row[17] === "ACTIVE/PAID") tr.className = "row-active";
-        else tr.className = "";
-    }
-
-    async function runHistorySearch() {
-        updateSearchStatus("SEARCHING...", "#f39c12");
-        const query = document.getElementById('uSearch').value.toLowerCase();
-        const sVal = document.getElementById('dateStart').value;
-        const eVal = document.getElementById('dateEnd').value;
-        const sD = sVal ? new Date(sVal + "T00:00:00") : null;
-        const eD = eVal ? new Date(eVal + "T23:59:59") : null;
-        
-        try {
-            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
-            const history = await res.json();
-            const filtered = history.filter((r, idx) => {
-                if(idx === 0) return false;
-                const txtMatch = query === "" || r.some(c => String(c).toLowerCase().includes(query));
-                const rOut = fmtDate(r[7]) ? new Date(fmtDate(r[7]) + "T00:00:00") : null;
-                const rIn = fmtDate(r[10]||r[9]) ? new Date(fmtDate(r[10]||r[9]) + "T23:59:59") : null;
-                let dtMatch = true;
-                if (sD && eD && rOut && rIn) dtMatch = (rOut <= eD && rIn >= sD);
-                return txtMatch && dtMatch;
-            });
-            document.getElementById('resBody').innerHTML = filtered.map(r => `
-                <tr>
-                    <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
-                    <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
-                    <td>${r[6] ? `<a href="${r[6]}" target="_blank" class="doc-link">📄</a>` : ''}</td>
-                    <td>${fmtDate(r[7])}</td><td>${cleanTime(r[8])}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${cleanTime(r[11])}</td>
-                    <td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td>
-                    <td>${r[17]||''}</td>
-                    <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
-                    <td>${r[19]||''}</td>
-                    <td style="font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
-                </tr>
-            `).join('');
-            updateSearchStatus(filtered.length + " FOUND", "#2ecc71");
-        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
-    }
-
-    function clearSearch() {
-        document.getElementById('uSearch').value = "";
-        document.getElementById('dateStart').value = "";
-        document.getElementById('dateEnd').value = "";
-        document.getElementById('resBody').innerHTML = "";
-        updateSearchStatus("READY TO SEARCH", "#aaa");
+    async function archive(i) { 
+        if(confirm("ARCHIVE?")) { 
+            // Send current Atomic Time to Script
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i], officialTime: officialTime.toISOString() }) }); 
+            location.reload(); 
+        } 
     }
 
     function fmtDate(v) { 
-        if(!v) return ""; 
-        const d = (v instanceof Date) ? v : new Date(v);
-        if(isNaN(d)) return "";
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if(!v) return ""; const d = (v instanceof Date) ? v : new Date(v);
+        if(isNaN(d)) return ""; return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function cleanTime(t) {
-        if(!t) return "00:00";
-        let s = String(t);
-        if(s.includes('T')) s = s.split('T')[1];
-        const p = s.split(':');
-        return p.length >= 2 ? p[0].padStart(2,'0') + ":" + p[1].padStart(2,'0') : "00:00";
+        if(!t) return "00:00"; let s = String(t); if(s.includes('T')) s = s.split('T')[1];
+        const p = s.split(':'); return p.length >= 2 ? p[0].padStart(2,'0') + ":" + p[1].padStart(2,'0') : "00:00";
     }
 
     function autoDays(i) {
-        const dO = fmtDate(currentData[i][7]);
-        const dI = fmtDate(currentData[i][10] || currentData[i][9]);
+        const dO = fmtDate(currentData[i][7]), dI = fmtDate(currentData[i][10] || currentData[i][9]);
         if(dO && dI) {
             const diff = Math.ceil((new Date(dI+"T12:00:00") - new Date(dO+"T12:00:00")) / 86400000);
             currentData[i][12] = diff > 0 ? diff : 1;
@@ -352,10 +278,9 @@
 
     function runMath(i, manualRem = false) {
         const d = parseFloat(currentData[i][12]) || 0, p = parseFloat(currentData[i][13]) || 0, a = parseFloat(currentData[i][15]) || 0;
-        const total = d * p;
-        currentData[i][14] = total;
+        const total = d * p; currentData[i][14] = total;
         if(!manualRem) currentData[i][16] = total - a;
-        sync(); checkOverdueStatus(); 
+        sync(); 
     }
 
     function updateCell(r, c, v) { currentData[r][c] = v; sync(); }
@@ -366,13 +291,28 @@
         updateStatus("LIVE", "#2ecc71"); 
     }
 
-    async function archive(i) { 
-        if(confirm("ARCHIVE?")) { 
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i], officialTime: officialTime.toISOString() }) }); 
-            location.reload(); 
-        } 
+    async function runHistorySearch() {
+        updateSearchStatus("SEARCHING...", "#f39c12");
+        const q = document.getElementById('uSearch').value.toLowerCase();
+        const sD = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value + "T00:00:00") : null;
+        const eD = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value + "T23:59:59") : null;
+        const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
+        const h = await res.json();
+        const filtered = h.filter((r, idx) => {
+            if(idx === 0) return false;
+            const txt = q === "" || r.some(c => String(c).toLowerCase().includes(q));
+            const rOut = fmtDate(r[7]) ? new Date(fmtDate(r[7]) + "T00:00:00") : null;
+            const rIn = fmtDate(r[10]||r[9]) ? new Date(fmtDate(r[10]||r[9]) + "T23:59:59") : null;
+            let dtMatch = true; if (sD && eD && rOut && rIn) dtMatch = (rOut <= eD && rIn >= sD);
+            return txt && dtMatch;
+        });
+        document.getElementById('resBody').innerHTML = filtered.map(r => `
+            <tr><td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td><td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td><td>${r[6] ? `<a href="${r[6]}" target="_blank">📄</a>` : ''}</td><td>${fmtDate(r[7])}</td><td>${cleanTime(r[8])}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${cleanTime(r[11])}</td><td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td><td>${r[17]||''}</td><td style="color:#ffcc00">${'★'.repeat(parseInt(r[18])||0)}</td><td>${r[19]||''}</td><td>${r[20] ? new Date(r[20]).toLocaleString() : ''}</td></tr>
+        `).join('');
+        updateSearchStatus(filtered.length + " FOUND", "#2ecc71");
     }
-    
+
+    function clearSearch() { document.getElementById('uSearch').value = ""; document.getElementById('dateStart').value = ""; document.getElementById('dateEnd').value = ""; document.getElementById('resBody').innerHTML = ""; updateSearchStatus("READY TO SEARCH", "#aaa"); }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
     init();
