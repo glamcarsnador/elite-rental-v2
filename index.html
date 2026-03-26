@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V3.0 PRO</title>
+    <title>ELITE CAR RENTAL V3.5</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -12,49 +12,68 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: #000; }
 
-        .header { 
-            background: white; padding: 20px; position: sticky; top: 0; z-index: 1000; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; flex-direction: column; 
-            align-items: center; gap: 15px;
+        /* HEADER LAYOUT: NOT STICKY */
+        .header-section { 
+            background: white; padding: 15px 30px; 
+            display: flex; flex-direction: column; gap: 15px;
+            border-bottom: 2px solid #ddd;
         }
-        .main-logo { height: 120px; width: auto; }
-        .status-container { display: flex; align-items: center; gap: 10px; font-weight: 800; text-transform: uppercase; font-size: 14px; }
+        
+        .top-bar { display: flex; align-items: center; gap: 20px; }
+        .main-logo { height: 80px; width: auto; }
+        
+        .status-container { 
+            display: flex; align-items: center; gap: 10px; 
+            font-weight: 800; text-transform: uppercase; font-size: 14px; 
+            background: #f9f9f9; padding: 10px 15px; border-radius: 50px; border: 1px solid #eee;
+        }
 
+        /* COLOR LEGEND BAR */
+        .legend-bar { display: flex; gap: 20px; flex-wrap: wrap; padding-top: 5px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; }
+        .dot { width: 15px; height: 15px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); }
+
+        /* TABLE STYLES */
         .table-wrapper { padding: 20px; overflow-x: auto; }
-        table { border-collapse: collapse; background: white; min-width: 4200px; border: 4px solid var(--border-color); margin: 0 auto; }
+        table { border-collapse: collapse; background: white; min-width: 4200px; border: 4px solid var(--border-color); }
         th { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 16px; border: 1px solid #fff; text-transform: uppercase; }
         td { border: 2px solid var(--border-color); padding: 0; text-align: center; position: relative; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
-        .col-orange { background-color: var(--light-orange) !important; }
-        
-        /* COLORS */
+        /* ROW COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
         .row-partial { background-color: #fff9c4 !important; }  
         .row-active { background-color: #c8e6c9 !important; }   
         .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } 
         .row-overdue input, .row-overdue select { color: #b71c1c !important; }
 
-        .calc-btn { cursor: pointer; font-size: 18px; position: absolute; right: 8px; top: 25%; opacity: 0.5; z-index: 10; color: #333; }
-        .calc-btn:hover { opacity: 1; color: var(--blue); transform: scale(1.2); }
+        .col-orange { background-color: var(--light-orange) !important; }
         .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        
+        .calc-btn { cursor: pointer; font-size: 18px; position: absolute; right: 8px; top: 25%; opacity: 0.5; }
+
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
         .search-box { background: white; padding: 20px; border-radius: 8px; color: black; min-width: 300px; }
         .results-table { background: white; color: black; min-width: 100%; border-radius: 8px; margin-top: 20px; border-collapse: collapse; }
-        .results-table td, .results-table th { padding: 12px; border: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <img src="logo.jpg" alt="ELITE CAR RENTAL" class="main-logo">
-    <div class="status-container">
-        <div id="sync-dot" style="width:14px; height:14px; border-radius:50%; background:#ccc;"></div>
-        <span id="sync-text">Connecting...</span>
+<div class="header-section">
+    <div class="top-bar">
+        <img src="logo.jpg" alt="ELITE" class="main-logo">
+        <div class="status-container">
+            <div id="sync-dot" style="width:12px; height:12px; border-radius:50%; background:#ccc;"></div>
+            <span id="sync-text">Connecting...</span>
+        </div>
+    </div>
+
+    <div class="legend-bar">
+        <div class="legend-item"><div class="dot" style="background:#b3e5fc"></div> RESERVED</div>
+        <div class="legend-item"><div class="dot" style="background:#fff9c4"></div> PARTIAL PAYMENT</div>
+        <div class="legend-item"><div class="dot" style="background:#c8e6c9"></div> ACTIVE / PAID</div>
+        <div class="legend-item"><div class="dot" style="background:#ffcdd2"></div> OVERDUE (RETURN PASSED)</div>
     </div>
 </div>
 
@@ -100,7 +119,7 @@
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4dNW-8KdgJG5gaQjBESaGwu7JADxMiL3trh4VTx1kZa__9WBseHu6J7ibI01gElwW1w/exec"; // <--- PASTE NEW URL HERE
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4dNW-8KdgJG5gaQjBESaGwu7JADxMiL3trh4VTx1kZa__9WBseHu6J7ibI01gElwW1w/exec"; 
     let currentData = [];
 
     async function init() {
@@ -154,13 +173,11 @@
                 <td><input type="date" value="${fmtDate(row[9])}" onchange="updateCell(${i},9,this.value); autoDays(${i})"></td>
                 <td><input type="date" value="${fmtDate(row[10])}" onchange="updateCell(${i},10,this.value); autoDays(${i})"></td>
                 <td><input type="time" value="${row[11]||''}" onchange="updateCell(${i},11,this.value); renderTable()"></td>
-                
                 <td><input type="number" value="${row[12]||''}" readonly></td>
                 <td><input type="number" value="${row[13]||''}" onchange="updateCell(${i},13,this.value); runMath(${i})"></td>
                 <td><input type="number" value="${row[14]||''}" readonly></td>
                 <td><input type="number" value="${row[15]||''}" onchange="updateCell(${i},15,this.value); runMath(${i})"></td>
                 <td><input type="number" id="rem-${i}" value="${row[16]||''}" onchange="updateCell(${i},16,this.value); runMath(${i}, true)"><span class="calc-btn" onclick="runMath(${i})">🔄</span></td>
-                
                 <td>
                     <select onchange="updateCell(${i},17,this.value); renderTable();">
                         <option value="" ${row[17]==''?'selected':''}>-</option>
@@ -191,13 +208,7 @@
             updateStatus("UPLOADING...", "#f39c12");
             const res = await fetch(SCRIPT_URL, { 
                 method: "POST", 
-                body: JSON.stringify({ 
-                    action: "upload", 
-                    row: i, 
-                    filename: file.name, 
-                    mimeType: file.type, 
-                    base64: e.target.result.split(',')[1] 
-                }) 
+                body: JSON.stringify({ action: "upload", row: i, filename: file.name, mimeType: file.type, base64: e.target.result.split(',')[1] }) 
             });
             const url = await res.text();
             currentData[i][6] = url; 
