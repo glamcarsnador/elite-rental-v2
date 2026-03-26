@@ -45,7 +45,7 @@
 
         /* BUTTONS */
         .calc-btn { cursor: pointer; font-size: 18px; position: absolute; right: 8px; top: 25%; opacity: 0.5; z-index: 10; color: #333; }
-        .calc-btn:hover { opacity: 1; color: var(--blue); scale: 1.2; }
+        .calc-btn:hover { opacity: 1; color: var(--blue); transform: scale(1.2); }
         .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         
         /* SEARCH CONSOLE */
@@ -131,11 +131,11 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // 1. Check Overdue first (Red Priority)
             const dateIn = new Date(row[9]);
             const timeParts = (row[8] || "00:00").split(":");
-            dateIn.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]));
+            dateIn.setHours(parseInt(timeParts[0] || 0), parseInt(timeParts[1] || 0));
 
+            // Priority: Red if Overdue
             if (row[2] && dateIn < now) {
                 tr.className = "row-overdue";
             } else {
@@ -203,14 +203,10 @@
         const d = parseFloat(currentData[i][10]) || 0;
         const p = parseFloat(currentData[i][11]) || 0;
         const a = parseFloat(currentData[i][13]) || 0;
-        
-        // Auto-calc Total only if user hasn't typed a different manual total
         const total = d * p;
         const rem = total - a;
-
         currentData[i][12] = total;
         currentData[i][14] = rem;
-
         renderTable(); 
         sync();
     }
@@ -222,11 +218,20 @@
 
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
-        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); 
+        
+        // CLEANING PASS: Convert dates and times to simple strings before sending
+        const cleanData = currentData.map(row => row.map((cell, idx) => {
+            if ((idx === 7 || idx === 8 || idx === 9) && cell) {
+                // Remove weird ISO timestamps or Date objects
+                return String(cell).split('T')[0]; 
+            }
+            return cell;
+        }));
+
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: cleanData }) }); 
         updateStatus("LIVE", "#2ecc71"); 
     }
 
-    // PDF, Search, and Archive functions remain same as version 2.0 logic
     async function handleFile(i, input) {
         const file = input.files[0];
         const reader = new FileReader();
@@ -256,7 +261,7 @@
         document.getElementById('resBody').innerHTML = filtered.map(r => `<tr><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmtDate(r[7])}</td><td>${fmtDate(r[9])}</td><td>${r[12]}</td><td>${r[15]}</td></tr>`).join('');
     }
 
-    async function archive(i) { if(confirm("ARCHIVE?")) { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); location.reload(); } }
+    async function archive(i) { if(confirm("ARCHIVE?")) { updateStatus("ARCHIVING...", "#f39c12"); await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i] }) }); location.reload(); } }
     function fmtDate(v) { if(!v) return ""; const d = new Date(v); return isNaN(d) ? "" : d.toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
     init();
