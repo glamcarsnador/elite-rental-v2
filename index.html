@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V4.0</title>
+    <title>ELITE CAR RENTAL V4.5 PRO</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -12,14 +12,11 @@
 
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; color: #000; }
 
-        /* HEADER SECTION - NOT STICKY */
+        /* HEADER SECTION */
         .header-section { background: white; padding: 20px; border-bottom: 3px solid #ddd; }
-        
-        /* LOGO CENTERED & BIGGER */
         .logo-row { text-align: center; margin-bottom: 20px; }
-        .main-logo { height: 160px; width: auto; transition: 0.3s; }
+        .main-logo { height: 160px; width: auto; }
 
-        /* LEGEND & STATUS ROW */
         .status-row { 
             display: flex; align-items: center; justify-content: center; 
             gap: 25px; flex-wrap: wrap; padding: 15px; background: #fdfdfd; 
@@ -29,56 +26,55 @@
         .legend-bar { display: flex; gap: 20px; align-items: center; }
         .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; }
         .dot { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
-
-        /* THICK GRAY DIVIDER */
         .divider { width: 4px; height: 30px; background-color: #ccc; border-radius: 2px; }
-
         .status-container { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 14px; }
 
-        /* TABLE WRAPPER */
+        /* TABLES STYLE */
         .table-wrapper { padding: 20px; overflow-x: auto; }
-        table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); }
-        th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; }
-        td { border: 2px solid var(--border-color); padding: 0; text-align: center; position: relative; }
+        table { border-collapse: collapse; background: white; min-width: 4400px; border: 4px solid var(--border-color); margin: 0 auto; }
+        th { background: var(--primary); color: white; padding: 15px; border: 1px solid #fff; text-transform: uppercase; font-size: 14px; }
+        td { border: 2px solid var(--border-color); padding: 0; text-align: center; position: relative; height: 50px; }
         
         input, select { border: none; padding: 15px 5px; width: 100%; box-sizing: border-box; font-size: 18px; font-weight: 700; outline: none; background: transparent; text-align: center; }
 
-        /* STAR RANKING STYLE */
+        /* RANKING STARS */
         .star-select { 
             color: #ffcc00; 
-            text-shadow: 1px 1px 1px #000, -1px -1px 1px #000, 1px -1px 1px #000, -1px 1px 1px #000; 
-            font-size: 22px; cursor: pointer;
+            text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000; 
+            font-size: 22px; 
         }
-        .star-select option { background: white; color: #ffcc00; }
 
         /* ROW COLORS */
         .row-reserved { background-color: #b3e5fc !important; } 
         .row-partial { background-color: #fff9c4 !important; }  
         .row-active { background-color: #c8e6c9 !important; }   
         .row-overdue { background-color: #ffcdd2 !important; color: #b71c1c !important; } 
-        .row-overdue input, .row-overdue select { color: #b71c1c !important; }
 
+        .col-orange { background-color: var(--light-orange) !important; }
+        .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+
+        /* SEARCH SECTION */
+        .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
+        .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 20px; }
+        .search-box { background: white; padding: 15px; border-radius: 8px; color: black; min-width: 400px; display: flex; gap: 10px; align-items: center; }
+        
         .btn-search { 
-            background: var(--primary); color: white; border: none; padding: 10px 20px; 
-            border-radius: 4px; font-weight: bold; cursor: pointer; margin-left: 10px;
+            background: var(--primary); color: white; border: none; padding: 12px 25px; 
+            border-radius: 4px; font-weight: bold; cursor: pointer;
         }
         .btn-search:hover { background: var(--orange); }
 
-        .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
-        .col-orange { background-color: var(--light-orange) !important; }
-        
-        .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
-        .search-grid { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; margin-bottom: 30px; }
-        .search-box { background: white; padding: 20px; border-radius: 8px; color: black; min-width: 400px; display: flex; align-items: center; justify-content: center; }
+        .search-status { 
+            display: inline-flex; align-items: center; gap: 8px; 
+            background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px;
+            margin-bottom: 20px; font-weight: bold; font-size: 12px;
+        }
     </style>
 </head>
 <body>
 
 <div class="header-section">
-    <div class="logo-row">
-        <img src="logo.jpg" alt="ELITE CAR RENTAL" class="main-logo">
-    </div>
-
+    <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
         <div class="legend-bar">
             <div class="legend-item"><div class="dot" style="background:#b3e5fc"></div> RESERVED</div>
@@ -86,9 +82,7 @@
             <div class="legend-item"><div class="dot" style="background:#c8e6c9"></div> ACTIVE / PAID</div>
             <div class="legend-item"><div class="dot" style="background:#ffcdd2"></div> OVERDUE</div>
         </div>
-
         <div class="divider"></div>
-
         <div class="status-container">
             <div id="sync-dot" style="width:14px; height:14px; border-radius:50%; background:#ccc;"></div>
             <span id="sync-text">CONNECTING...</span>
@@ -111,34 +105,38 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
+    <div class="search-status">
+        <div id="search-dot" style="width:10px; height:10px; border-radius:50%; background:#aaa;"></div>
+        <span id="search-text">READY TO SEARCH</span>
+    </div>
     <div class="search-grid">
         <div class="search-box">
-            <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; height:45px; flex:1;">
+            <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1;">
             <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
         </div>
         <div class="search-box">
-            <div style="display:flex; gap:10px; align-items:center;">
-                <input type="date" id="dateStart" style="border:1px solid #ccc;">
-                <span>TO</span>
-                <input type="date" id="dateEnd" style="border:1px solid #ccc;">
-            </div>
+            <input type="date" id="dateStart" style="border:1px solid #ccc;">
+            <span>TO</span>
+            <input type="date" id="dateEnd" style="border:1px solid #ccc;">
             <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
         </div>
     </div>
-    <div style="overflow-x:auto;">
-        <table style="background:white; color:black; min-width:100%; border-collapse: collapse;">
+    <div class="table-wrapper" style="background:transparent;">
+        <table style="min-width:4400px;">
             <thead>
-                <tr style="background:#eee;">
-                    <th>CAR</th><th>CLIENT</th><th>PHONE</th><th>OUT</th><th>IN/EXT</th><th>TOTAL</th><th>STATE</th>
+                <tr>
+                    <th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th>
+                    <th>DATE OUT</th><th>TIME OUT</th><th>DATE IN</th><th>EXTENDED DATE IN</th><th>TIME IN</th><th>DAYS</th><th>DAY PRICE</th>
+                    <th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th><th>STATE</th><th>RANKING</th><th>NOTES</th><th>ARCHIVED ON</th>
                 </tr>
             </thead>
-            <tbody id="resBody"></tbody>
+            <tbody id="resBody" style="background:white; color:black;"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx4dNW-8KdgJG5gaQjBESaGwu7JADxMiL3trh4VTx1kZa__9WBseHu6J7ibI01gElwW1w/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwesVmnLi2yINh-Efn8EKK17svzrZFUaEC06qsr0HqUbKgQziXnBx4LTF8BAU3aJ2yMKg/exec"; 
     let currentData = [];
 
     async function init() {
@@ -159,7 +157,6 @@
             const row = currentData[i];
             const tr = document.createElement('tr');
             
-            // LIVE OVERDUE CHECK
             let isOverdue = false;
             const targetDateStr = row[10] ? row[10] : row[9]; 
             const targetTimeStr = row[11] || "00:00"; 
@@ -222,6 +219,48 @@
         }
     }
 
+    async function runHistorySearch() {
+        updateSearchStatus("SEARCHING...", "#f39c12");
+        const query = document.getElementById('uSearch').value.toLowerCase();
+        const sD = new Date(document.getElementById('dateStart').value);
+        const eD = new Date(document.getElementById('dateEnd').value);
+
+        try {
+            const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
+            const history = await res.json();
+            
+            const filtered = history.filter((row, idx) => {
+                if(idx === 0) return false;
+                const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
+                const carOut = new Date(row[7]); 
+                const carIn = row[10] ? new Date(row[10]) : new Date(row[9]);
+                const dateMatch = (isNaN(sD.getTime()) || isNaN(eD.getTime())) ? true : (carOut <= eD && carIn >= sD);
+                return textMatch && dateMatch;
+            });
+
+            const resBody = document.getElementById('resBody');
+            resBody.innerHTML = filtered.map(r => `
+                <tr style="height:50px;">
+                    <td class="col-orange">${r[0]||''}</td><td class="col-orange">${r[1]||''}</td>
+                    <td>${r[2]||''}</td><td>${r[3]||''}</td><td>${r[4]||''}</td><td>${r[5]||''}</td>
+                    <td>${r[6] ? '📄' : ''}</td>
+                    <td>${fmtDate(r[7])}</td><td>${r[8]||''}</td><td>${fmtDate(r[9])}</td><td>${fmtDate(r[10])}</td><td>${r[11]||''}</td>
+                    <td>${r[12]||''}</td><td>${r[13]||''}</td><td>${r[14]||''}</td><td>${r[15]||''}</td><td>${r[16]||''}</td>
+                    <td>${r[17]||''}</td>
+                    <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
+                    <td>${r[19]||''}</td>
+                    <td style="font-size:10px;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                </tr>
+            `).join('');
+
+            if(filtered.length > 0) updateSearchStatus(`${filtered.length} RESULTS FOUND`, "#2ecc71");
+            else updateSearchStatus("NO MATCH FOUND", "#e74c3c");
+
+        } catch (err) {
+            updateSearchStatus("SEARCH FAILED", "#e74c3c");
+        }
+    }
+
     function autoDays(i) {
         const dOut = new Date(currentData[i][7]);
         const dTarget = currentData[i][10] ? new Date(currentData[i][10]) : new Date(currentData[i][9]);
@@ -245,7 +284,7 @@
 
     function updateCell(r, c, v) { 
         currentData[r][c] = v; 
-        if(c == 9 || c == 10 || c == 11) renderTable(); // Live Overdue color update
+        if(c == 9 || c == 10 || c == 11) renderTable(); 
         sync(); 
     }
 
@@ -259,23 +298,6 @@
         updateStatus("LIVE", "#2ecc71"); 
     }
 
-    async function runHistorySearch() {
-        const query = document.getElementById('uSearch').value.toLowerCase();
-        const sD = new Date(document.getElementById('dateStart').value);
-        const eD = new Date(document.getElementById('dateEnd').value);
-        const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
-        const history = await res.json();
-        const filtered = history.filter((row, idx) => {
-            if(idx === 0) return false;
-            const textMatch = row.some(cell => String(cell).toLowerCase().includes(query));
-            const carOut = new Date(row[7]); 
-            const carIn = row[10] ? new Date(row[10]) : new Date(row[9]);
-            const dateMatch = (isNaN(sD.getTime()) || isNaN(eD.getTime())) ? true : (carOut <= eD && carIn >= sD);
-            return textMatch && dateMatch;
-        });
-        document.getElementById('resBody').innerHTML = filtered.map(r => `<tr><td>${r[0]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${fmtDate(r[7])}</td><td>${fmtDate(r[10]||r[9])}</td><td>${r[14]}</td><td>${r[17]}</td></tr>`).join('');
-    }
-
     async function archive(i) { 
         if(confirm("ARCHIVE?")) { 
             const cleanedRow = currentData[i].map((cell, colIdx) => ([7,8,9,10,11].includes(colIdx) && cell) ? String(cell).split('T')[0] : cell);
@@ -283,8 +305,9 @@
             location.reload(); 
         } 
     }
-    function fmtDate(v) { if(!v) return ""; const d = new Date(v); return isNaN(d) ? "" : d.toISOString().split('T')[0]; }
+    function fmtDate(v) { if(!v || isNaN(new Date(v))) return ""; return new Date(v).toISOString().split('T')[0]; }
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
+    function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
     init();
 </script>
 </body>
