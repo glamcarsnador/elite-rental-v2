@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ELITE CAR RENTAL V7.5 ATOMIC SYNC</title>
+    <title>ELITE CAR RENTAL V7.6 ATOMIC SYNC</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -23,10 +23,11 @@
             border: 1px solid #eee; border-radius: 8px;
         }
 
+        /* FIXED CLOCK STYLING (WHITE BACKGROUND) */
         .clock-display {
-            background: #000; color: #0f0; padding: 10px 20px; border-radius: 5px;
-            font-family: 'Courier New', monospace; font-weight: bold; font-size: 16px;
-            display: flex; flex-direction: column; align-items: center; min-width: 250px;
+            background: white; color: #333; padding: 5px 20px; border-radius: 8px;
+            font-family: 'Segoe UI', sans-serif; font-weight: bold; border: 1px solid #ddd;
+            display: flex; flex-direction: column; align-items: center; min-width: 220px;
         }
         
         .legend-bar { display: flex; gap: 20px; align-items: center; }
@@ -52,14 +53,21 @@
         .console { background: #2c3e50; color: white; padding: 40px 20px; margin-top: 50px; text-align: center; }
         .search-grid { 
             display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; 
-            max-width: 1200px; margin: 0 auto 30px auto; 
+            max-width: 1200px; margin: 0 auto 10px auto; 
         }
         .search-box { 
             background: white; padding: 15px; border-radius: 8px; color: black; 
             display: flex; gap: 10px; align-items: center; flex: 1; min-width: 300px;
         }
-        .btn-search { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-clear { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+
+        /* RESTORED SEARCH STATUS BAR */
+        .search-status-bar { 
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+            margin-bottom: 20px; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50px; width: fit-content; margin: 0 auto 20px auto;
+        }
+
+        .btn-search { background: var(--blue); color: white; border: none; padding: 12px 25px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-clear-red { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 12px; }
 
         .doc-link { text-decoration: none; font-size: 24px; cursor: pointer; }
     </style>
@@ -70,9 +78,9 @@
     <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
         <div class="clock-display">
-            <div style="font-size: 12px; color: #aaa; margin-bottom: 4px;">OFFICIAL MOROCCO (GMT+1) <span id="clock-status">🌐</span></div>
-            <div id="live-date" style="color: #fff; letter-spacing: 1px;">01 JAN 2026</div>
-            <div id="live-clock" style="font-size: 24px;">00:00:00</div>
+            <div style="font-size: 11px; color: #777; margin-bottom: 2px; font-weight: 900;">MOROCCO TIME <span id="clock-status">🌐</span></div>
+            <div id="live-date" style="color: #2c3e50; font-size: 14px;">01 JAN 2026</div>
+            <div id="live-clock" style="font-size: 22px; color: #e67e22;">00:00:00</div>
         </div>
 
         <div class="legend-bar">
@@ -104,18 +112,23 @@
 
 <div class="console">
     <h2>INSIGHTS & HISTORY</h2>
+    
+    <div class="search-status-bar">
+        <div id="search-dot" style="width:12px; height:12px; border-radius:50%; background:#aaa;"></div>
+        <span id="search-text">READY TO SEARCH</span>
+        <button class="btn-clear-red" onclick="clearSearch()">CLEAR RESULTS</button>
+    </div>
+
     <div class="search-grid">
         <div class="search-box">
-            <input type="text" id="uSearch" placeholder="Client Name, Phone, ID..." style="border:1px solid #ccc; flex:1; height: 40px;">
+            <input type="text" id="uSearch" placeholder="Name, Phone, ID..." style="border:1px solid #ccc; flex:1; height: 40px;">
         </div>
         <div class="search-box">
-            <span style="font-weight: bold; font-size: 12px;">DATE FROM:</span>
             <input type="date" id="dateStart" style="border:1px solid #ccc; height: 40px;">
-            <span style="font-weight: bold; font-size: 12px;">TO:</span>
+            <span>TO</span>
             <input type="date" id="dateEnd" style="border:1px solid #ccc; height: 40px;">
         </div>
-        <button class="btn-search" onclick="runHistorySearch()">SEARCH HISTORY</button>
-        <button class="btn-clear" onclick="clearSearch()">RESET</button>
+        <button class="btn-search" onclick="runHistorySearch()">RUN SEARCH</button>
     </div>
     
     <div class="table-wrapper" style="background:transparent;">
@@ -138,12 +151,11 @@
     let officialTime = new Date();
     let isClockOfficial = false;
 
-    // --- ENHANCED DUAL API SYNC (DATE + TIME) ---
     async function syncGlobalTime() {
         try {
             const res = await fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca');
             const data = await res.json();
-            officialTime = new Date(data.datetime); // Full Date-Time string
+            officialTime = new Date(data.datetime);
             isClockOfficial = true;
         } catch (e) {
             try {
@@ -156,20 +168,23 @@
                 isClockOfficial = false;
             }
         }
-        updateClockDisplay();
     }
 
+    // CLOCK UPDATE LOOP (Fixed focus bug)
     setInterval(() => {
         officialTime.setSeconds(officialTime.getSeconds() + 1);
-        updateClockDisplay();
-        renderTable(); // Re-trigger overdue calculation every second
-    }, 1000);
-
-    function updateClockDisplay() {
+        
+        // Update the visual clock elements ONLY
         document.getElementById('live-date').innerText = officialTime.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
         document.getElementById('live-clock').innerText = officialTime.toLocaleTimeString('fr-FR');
         document.getElementById('clock-status').innerText = isClockOfficial ? "🌐" : "⚠️";
-    }
+
+        // Logic check: only update row colors if no input is currently being touched
+        const activeEl = document.activeElement.tagName;
+        if (activeEl !== 'INPUT' && activeEl !== 'SELECT') {
+            checkOverdueStatus(); 
+        }
+    }, 1000);
 
     async function init() {
         await syncGlobalTime();
@@ -184,38 +199,13 @@
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
-
         for (let i = 1; i < currentData.length; i++) {
             const row = currentData[i];
             const tr = document.createElement('tr');
+            tr.id = `row-${i}`; // ID for dynamic color updates
             
-            let isOverdue = false;
-            const targetDateValue = row[10] ? row[10] : row[9]; 
-            const targetTimeStr = row[11] || "00:00"; 
-
-            if (targetDateValue && row[2]) {
-                const dateString = fmtDate(targetDateValue);
-                const timeString = cleanTime(targetTimeStr);
-                const dateParts = dateString.split('-');
-                const timeParts = timeString.split(':');
-                
-                const deadline = new Date(
-                    parseInt(dateParts[0]),
-                    parseInt(dateParts[1]) - 1,
-                    parseInt(dateParts[2]),
-                    parseInt(timeParts[0]),
-                    parseInt(timeParts[1])
-                );
-
-                if (!isNaN(deadline.getTime()) && deadline < officialTime) {
-                    isOverdue = true;
-                }
-            }
-
-            if (isOverdue) tr.className = "row-overdue";
-            else if(row[17] === "RESERVED") tr.className = "row-reserved";
-            else if(row[17] === "PARTIAL") tr.className = "row-partial";
-            else if(row[17] === "ACTIVE/PAID") tr.className = "row-active";
+            // Initial color set
+            updateRowColor(tr, row);
 
             tr.innerHTML = `
                 <td class="col-orange"><input value="${row[0]||''}" onchange="updateCell(${i},0,this.value)"></td>
@@ -263,29 +253,52 @@
         }
     }
 
+    // Logic to update colors without redrawing the whole table
+    function checkOverdueStatus() {
+        for (let i = 1; i < currentData.length; i++) {
+            const tr = document.getElementById(`row-${i}`);
+            if (tr) updateRowColor(tr, currentData[i]);
+        }
+    }
+
+    function updateRowColor(tr, row) {
+        let isOverdue = false;
+        const targetDateValue = row[10] ? row[10] : row[9]; 
+        const targetTimeStr = row[11] || "00:00"; 
+        if (targetDateValue && row[2]) {
+            const dateStr = fmtDate(targetDateValue);
+            const timeStr = cleanTime(targetTimeStr);
+            const dParts = dateStr.split('-');
+            const tParts = timeStr.split(':');
+            const deadline = new Date(parseInt(dParts[0]), parseInt(dParts[1])-1, parseInt(dParts[2]), parseInt(tParts[0]), parseInt(tParts[1]));
+            if (!isNaN(deadline.getTime()) && deadline < officialTime) isOverdue = true;
+        }
+        if (isOverdue) tr.className = "row-overdue";
+        else if(row[17] === "RESERVED") tr.className = "row-reserved";
+        else if(row[17] === "PARTIAL") tr.className = "row-partial";
+        else if(row[17] === "ACTIVE/PAID") tr.className = "row-active";
+        else tr.className = "";
+    }
+
     async function runHistorySearch() {
+        updateSearchStatus("SEARCHING...", "#f39c12");
         const query = document.getElementById('uSearch').value.toLowerCase();
-        const startVal = document.getElementById('dateStart').value;
-        const endVal = document.getElementById('dateEnd').value;
-        
-        let sD = startVal ? new Date(startVal + "T00:00:00") : null;
-        let eD = endVal ? new Date(endVal + "T23:59:59") : null;
+        const sVal = document.getElementById('dateStart').value;
+        const eVal = document.getElementById('dateEnd').value;
+        const sD = sVal ? new Date(sVal + "T00:00:00") : null;
+        const eD = eVal ? new Date(eVal + "T23:59:59") : null;
         
         try {
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
             const history = await res.json();
-            const filtered = history.filter((row, idx) => {
+            const filtered = history.filter((r, idx) => {
                 if(idx === 0) return false;
-                const textMatch = query === "" || row.some(cell => String(cell).toLowerCase().includes(query));
-                const rowOutStr = fmtDate(row[7]);
-                const rowInStr = fmtDate(row[10] || row[9]);
-                const rowOut = rowOutStr ? new Date(rowOutStr + "T00:00:00") : null;
-                const rowIn = rowInStr ? new Date(rowInStr + "T23:59:59") : null;
-                let dateMatch = true;
-                if (sD && eD && rowOut && rowIn) {
-                    dateMatch = (rowOut <= eD && rowIn >= sD);
-                }
-                return textMatch && dateMatch;
+                const txtMatch = query === "" || r.some(c => String(c).toLowerCase().includes(query));
+                const rOut = fmtDate(r[7]) ? new Date(fmtDate(r[7]) + "T00:00:00") : null;
+                const rIn = fmtDate(r[10]||r[9]) ? new Date(fmtDate(r[10]||r[9]) + "T23:59:59") : null;
+                let dtMatch = true;
+                if (sD && eD && rOut && rIn) dtMatch = (rOut <= eD && rIn >= sD);
+                return txtMatch && dtMatch;
             });
             document.getElementById('resBody').innerHTML = filtered.map(r => `
                 <tr>
@@ -297,10 +310,11 @@
                     <td>${r[17]||''}</td>
                     <td class="star-select">${'★'.repeat(parseInt(r[18])||0)}</td>
                     <td>${r[19]||''}</td>
-                    <td style="font-size:18px; font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
+                    <td style="font-weight:700;">${r[20] ? new Date(r[20]).toLocaleString() : ''}</td>
                 </tr>
             `).join('');
-        } catch (e) { alert("Search Error"); }
+            updateSearchStatus(filtered.length + " FOUND", "#2ecc71");
+        } catch (e) { updateSearchStatus("ERROR", "#e74c3c"); }
     }
 
     function clearSearch() {
@@ -308,54 +322,43 @@
         document.getElementById('dateStart').value = "";
         document.getElementById('dateEnd').value = "";
         document.getElementById('resBody').innerHTML = "";
+        updateSearchStatus("READY TO SEARCH", "#aaa");
     }
 
-    // Helper functions (fmtDate, cleanTime, autoDays, runMath, etc. remain unchanged)
     function fmtDate(v) { 
         if(!v) return ""; 
         const d = (v instanceof Date) ? v : new Date(v);
         if(isNaN(d)) return "";
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${y}-${m}-${day}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
     function cleanTime(t) {
         if(!t) return "00:00";
         let s = String(t);
         if(s.includes('T')) s = s.split('T')[1];
-        const parts = s.split(':');
-        if(parts.length >= 2) return parts[0].padStart(2,'0') + ":" + parts[1].padStart(2,'0');
-        return "00:00";
+        const p = s.split(':');
+        return p.length >= 2 ? p[0].padStart(2,'0') + ":" + p[1].padStart(2,'0') : "00:00";
     }
 
     function autoDays(i) {
-        const dOutStr = fmtDate(currentData[i][7]);
-        const dInStr = fmtDate(currentData[i][10] || currentData[i][9]);
-        if(dOutStr && dInStr) {
-            const dOut = new Date(dOutStr + "T12:00:00");
-            const dIn = new Date(dInStr + "T12:00:00");
-            const diff = Math.ceil((dIn - dOut) / (1000 * 60 * 60 * 24));
+        const dO = fmtDate(currentData[i][7]);
+        const dI = fmtDate(currentData[i][10] || currentData[i][9]);
+        if(dO && dI) {
+            const diff = Math.ceil((new Date(dI+"T12:00:00") - new Date(dO+"T12:00:00")) / 86400000);
             currentData[i][12] = diff > 0 ? diff : 1;
             runMath(i);
         }
     }
 
     function runMath(i, manualRem = false) {
-        const d = parseFloat(currentData[i][12]) || 0;
-        const p = parseFloat(currentData[i][13]) || 0;
-        const a = parseFloat(currentData[i][15]) || 0;
+        const d = parseFloat(currentData[i][12]) || 0, p = parseFloat(currentData[i][13]) || 0, a = parseFloat(currentData[i][15]) || 0;
         const total = d * p;
         currentData[i][14] = total;
         if(!manualRem) currentData[i][16] = total - a;
-        sync(); renderTable(); 
+        sync(); checkOverdueStatus(); 
     }
 
-    function updateCell(r, c, v) { 
-        currentData[r][c] = v; 
-        sync(); 
-    }
+    function updateCell(r, c, v) { currentData[r][c] = v; sync(); }
 
     async function sync() { 
         updateStatus("SAVING...", "#f39c12"); 
@@ -371,6 +374,7 @@
     }
     
     function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.backgroundColor = c; }
+    function updateSearchStatus(t, c) { document.getElementById('search-text').innerText = t; document.getElementById('search-dot').style.backgroundColor = c; }
     init();
 </script>
 </body>
