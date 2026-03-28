@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELITE CAR V8.1 - ATOMIC PRECISION</title>
+    <title>ELITE CAR V8.2 - PRO ATOMIC</title>
     <style>
         :root { 
             --primary: #2c3e50; --orange: #e67e22; --green: #2ecc71; 
@@ -17,67 +17,54 @@
         .header-section { background: white; padding: 15px; border-bottom: 3px solid #ddd; position: sticky; top: 0; z-index: 1000; }
         .logo-row { text-align: center; margin-bottom: 10px; }
         .main-logo { height: 80px; width: auto; transition: 0.3s; }
-        @media (min-width: 768px) { .main-logo { height: 130px; } }
+        @media (min-width: 768px) { .main-logo { height: 120px; } }
 
-        .status-row { 
-            display: flex; align-items: center; justify-content: center; 
-            gap: 15px; flex-wrap: wrap; padding: 10px; background: #fdfdfd; 
-            border: 1px solid #eee; border-radius: 8px;
-        }
-
-        .clock-display {
-            background: white; color: #333; padding: 5px 15px; border-radius: 8px;
-            font-weight: bold; border: 2px solid #eee; text-align: center; min-width: 160px;
-        }
+        .status-row { display: flex; align-items: center; justify-content: center; gap: 15px; flex-wrap: wrap; padding: 10px; }
+        .clock-display { background: white; border: 2px solid #eee; padding: 5px 15px; border-radius: 8px; text-align: center; min-width: 150px; font-weight: bold; }
         
         /* TABLES */
         .table-wrapper { padding: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         table { border-collapse: collapse; background: white; min-width: 3200px; border: 3px solid var(--border-color); }
         th { background: var(--primary); color: white; padding: 12px; border: 1px solid #fff; text-transform: uppercase; font-size: 13px; position: sticky; top: 0; }
-        td { border: 1px solid var(--border-color); padding: 2px; text-align: center; height: 50px; font-size: 16px; font-weight: 700; }
+        td { border: 1px solid var(--border-color); padding: 2px; text-align: center; height: 50px; font-size: 16px; font-weight: 700; position: relative; }
         
-        input, select { border: none; padding: 10px 2px; width: 100%; box-sizing: border-box; font-size: 16px; font-weight: 700; outline: none; background: transparent; text-align: center; color: inherit; }
+        input, select { border: none; width: 100%; box-sizing: border-box; font-size: 16px; font-weight: 700; outline: none; background: transparent; text-align: center; color: inherit; padding: 10px 2px; }
 
-        /* COLOR ENGINE */
+        /* ROW COLORS (ACTIVE ONLY) */
         .row-overdue { background-color: var(--red) !important; color: var(--dark-red) !important; } 
         .row-reserved { background-color: #b3e5fc !important; } 
         .row-partial { background-color: #fff9c4 !important; }  
         .row-active { background-color: #c8e6c9 !important; }   
         .col-orange { background-color: var(--light-orange) !important; }
 
-        /* BUTTONS */
-        .btn-up { background: var(--blue); color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
-        .btn-finish { background: var(--primary); color: white; border: none; padding: 10px 15px; cursor: pointer; font-weight: bold; border-radius: 4px; }
-        .btn-reset { cursor: pointer; font-size: 18px; margin-left: 5px; color: var(--blue); background: none; border: none; vertical-align: middle; }
+        /* UI FEEDBACK */
+        .up-loading { font-size: 10px; color: var(--blue); animation: blink 1s infinite; display: none; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        .btn-up { background: var(--blue); color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+        .btn-reset { cursor: pointer; color: var(--blue); background: none; border: none; font-size: 18px; }
+        .btn-finish { background: var(--primary); color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; }
 
         /* SEARCH CONSOLE */
-        .console { background: #2c3e50; color: white; padding: 30px 15px; text-align: center; }
-        .search-grid { display: flex; flex-direction: column; gap: 10px; align-items: center; justify-content: center; }
-        @media (min-width: 768px) { .search-grid { flex-direction: row; gap: 20px; } }
-        .search-box { background: white; padding: 10px; border-radius: 8px; color: black; display: flex; gap: 10px; align-items: center; min-width: 250px; }
-        .btn-search { background: var(--blue); color: white; border: none; padding: 12px 30px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-
-        /* OVERLAY */
-        #overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--orange); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .console { background: #2c3e50; color: white; padding: 30px 15px; margin-top: 20px; }
+        .search-grid { display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center; }
+        @media (min-width: 768px) { .search-grid { flex-direction: row; } }
+        .search-box { background: white; padding: 10px; border-radius: 8px; color: black; display: flex; gap: 10px; align-items: center; min-width: 280px; }
+        .btn-search { background: var(--blue); color: white; border: none; padding: 12px 35px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<div id="overlay">
-    <div class="spinner"></div>
-    <h3 style="color: var(--primary); margin-top: 15px;">SYNCING ELITE V8.1...</h3>
-</div>
 
 <div class="header-section">
     <div class="logo-row"><img src="logo.jpg" alt="ELITE" class="main-logo"></div>
     <div class="status-row">
         <div class="clock-display">
-            <div id="live-date">00/00/00</div>
+            <div id="live-date">--/--/--</div>
             <div id="live-clock" style="color: var(--orange); font-size: 20px;">00:00:00</div>
         </div>
-        <div id="sync-status" style="font-weight: 900; color: #2ecc71;">● LIVE</div>
+        <div style="font-weight: 900;">
+            <span id="sync-dot" style="color:#2ecc71">●</span> <span id="sync-text">LIVE</span>
+        </div>
     </div>
 </div>
 
@@ -95,63 +82,71 @@
 </div>
 
 <div class="console">
+    <h2 style="margin-bottom: 20px;">HISTORY SEARCH</h2>
     <div class="search-grid">
+        <div class="search-box"><input type="text" id="uSearch" placeholder="NAME, PHONE, CAR, ID..." style="text-align:left;"></div>
         <div class="search-box">
-            <input type="text" id="uSearch" placeholder="NAME, PHONE, CAR..." style="text-align:left; padding-left:10px;">
+            <span style="font-size:11px;color:gray;">FROM</span><input type="date" id="dateStart">
+            <span style="font-size:11px;color:gray;">TO</span><input type="date" id="dateEnd">
         </div>
-        <div class="search-box">
-            <span style="font-size:11px; color:gray;">FROM</span>
-            <input type="date" id="dateStart">
-            <span style="font-size:11px; color:gray;">TO</span>
-            <input type="date" id="dateEnd">
-        </div>
-        <button class="btn-search" onclick="runHistorySearch()">SEARCH HISTORY</button>
+        <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
     </div>
-    <div class="table-wrapper" style="margin-top:20px; background:transparent;">
-        <table id="historyTable" style="background:white; color:black;">
+    <div style="margin-top: 15px; font-weight: bold;"><span id="search-status">READY</span></div>
+
+    <div class="table-wrapper" style="margin-top:20px; background:white; color:black;">
+        <table id="historyTable">
+            <thead>
+                <tr>
+                    <th>CAR</th><th>MATRICULE</th><th>CLIENT NAME</th><th>PHONE</th><th>ID CARD N°</th><th>DRIVING LICENCE</th><th>DOCS</th>
+                    <th>DATE OUT</th><th>TIME OUT</th><th>DATE IN</th><th>EXT. DATE IN</th><th>TIME IN</th><th>DAYS</th><th>DAY PRICE</th>
+                    <th>TOTAL</th><th>ADVANCE</th><th>REMAINING</th><th>STATE</th><th>RANKING</th><th>NOTES</th><th>ARCHIVED ON</th>
+                </tr>
+            </thead>
             <tbody id="resBody"></tbody>
         </table>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1ZS3ZwZ7xPEa1Cp43wW2fmhwmWI9tPmfWGnWlQ_mp6njC2ugSlyG02vz_S5QvhVgxzA/exec"; 
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeKFOdHHH3-vI-W8Y6z-iaoOv3F7JeJwiXgru2n_ckM8C6_39NXETvV0CggqGBwFltBA/exec"; 
     let currentData = [];
     let officialTime = new Date();
 
+    // --- INITIALIZATION ---
     async function init() {
+        // Parallel sync
+        fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca').then(r => r.json()).then(d => { if(d) officialTime = new Date(d.datetime); });
+        
         try {
-            const [tRes, dRes] = await Promise.all([
-                fetch('https://worldtimeapi.org/api/timezone/Africa/Casablanca').then(r => r.json()).catch(() => null),
-                fetch(SCRIPT_URL).then(r => r.json())
-            ]);
-            if(tRes) officialTime = new Date(tRes.datetime);
-            currentData = dRes;
+            const res = await fetch(SCRIPT_URL);
+            currentData = await res.json();
             renderTable();
-            document.getElementById('overlay').style.display = 'none';
-            
-            setInterval(() => {
-                officialTime.setSeconds(officialTime.getSeconds() + 1);
-                document.getElementById('live-date').innerText = toEliteDate(officialTime);
-                document.getElementById('live-clock').innerText = officialTime.toLocaleTimeString('fr-FR');
-                processOverdue();
-            }, 1000);
-        } catch(e) { alert("Sync Error. Check Script URL."); }
+        } catch(e) { updateStatus("OFFLINE", "#e74c3c"); }
+
+        setInterval(() => {
+            officialTime.setSeconds(officialTime.getSeconds() + 1);
+            document.getElementById('live-date').innerText = eliteDate(officialTime);
+            document.getElementById('live-clock').innerText = officialTime.toLocaleTimeString('fr-FR', {hour12: false});
+            processColors();
+        }, 1000);
     }
 
-    // --- DATE/TIME TRANSLATORS ---
-    function toEliteDate(d) {
+    // --- STRICT FORMATTERS ---
+    function eliteDate(d) {
         if(!d || isNaN(d)) return "";
-        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(-2)}`;
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const yy = String(d.getFullYear()).slice(-2);
+        return `${dd}/${mm}/${yy}`;
     }
 
-    function fromEliteDate(s) {
+    function fromElite(s) {
         if(!s || s.length < 8) return null;
         const [d, m, y] = s.split('/').map(Number);
         return new Date(2000+y, m-1, d);
     }
 
-    // --- TABLE RENDER ---
+    // --- TABLE ENGINE ---
     function renderTable() {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -168,19 +163,20 @@
                 <td><input value="${row[5]||''}" onchange="upd(${i},5,this.value)"></td>
                 <td>
                     <button class="btn-up" onclick="document.getElementById('up-${i}').click()">UPLOAD</button>
+                    <div id="up-ld-${i}" class="up-loading">UPLOADING...</div>
                     <input type="file" id="up-${i}" hidden onchange="handleUpload(${i}, this)">
                     ${row[6] ? `<a href="${row[6]}" target="_blank" style="font-size:20px;">📄</a>` : ''}
                 </td>
-                <td><input type="date" value="${isoDate(row[7])}" onchange="dateToElite(${i},7,this.value)"></td>
+                <td><input type="date" value="${toIso(row[7])}" onchange="applyDate(${i},7,this.value)"></td>
                 <td><input type="time" value="${row[8]||''}" onchange="upd(${i},8,this.value)"></td>
-                <td><input type="date" value="${isoDate(row[9])}" onchange="dateToElite(${i},9,this.value)"></td>
-                <td><input type="date" value="${isoDate(row[10])}" onchange="dateToElite(${i},10,this.value)"></td>
+                <td><input type="date" value="${toIso(row[9])}" onchange="applyDate(${i},9,this.value)"></td>
+                <td><input type="date" value="${toIso(row[10])}" onchange="applyDate(${i},10,this.value)"></td>
                 <td><input type="time" value="${row[11]||''}" onchange="upd(${i},11,this.value)"></td>
                 <td><input value="${row[12]||''}" readonly></td>
-                <td><input type="number" value="${row[13]||''}" onchange="upd(${i},13,this.value); math(${i})"></td>
+                <td><input type="number" value="${row[13]||''}" onchange="upd(${i},13,this.value); autoMath(${i})"></td>
                 <td><input value="${row[14]||''}" readonly></td>
-                <td><input type="number" value="${row[15]||''}" onchange="upd(${i},15,this.value); math(${i})"></td>
-                <td><input type="number" value="${row[16]||''}" onchange="upd(${i},16,this.value)"> <button class="btn-reset" onclick="resetRem(${i})">🔄</button></td>
+                <td><input type="number" value="${row[15]||''}" onchange="upd(${i},15,this.value); autoMath(${i})"></td>
+                <td><input type="number" value="${row[16]||''}" onchange="upd(${i},16,this.value)"> <button class="btn-reset" onclick="resetRemaining(${i})">🔄</button></td>
                 <td>
                     <select onchange="upd(${i},17,this.value)">
                         <option value="" ${row[17]==''?'selected':''}>-</option>
@@ -189,66 +185,66 @@
                         <option value="PARTIAL" ${row[17]=='PARTIAL'?'selected':''}>PARTIAL</option>
                     </select>
                 </td>
-                <td><input type="number" value="${row[18]||''}" onchange="upd(${i},18,this.value)"></td>
+                <td>
+                    <select onchange="upd(${i},18,this.value)" style="color:#f1c40f; font-size:18px;">
+                        <option value="1" ${row[18]=='1'?'selected':''}>★</option>
+                        <option value="2" ${row[18]=='2'?'selected':''}>★★</option>
+                        <option value="3" ${row[18]=='3'?'selected':''}>★★★</option>
+                        <option value="4" ${row[18]=='4'?'selected':''}>★★★★</option>
+                        <option value="5" ${row[18]=='5'?'selected':''}>★★★★★</option>
+                    </select>
+                </td>
                 <td><input value="${row[19]||''}" onchange="upd(${i},19,this.value)"></td>
-                <td><button class="btn-finish" onclick="archive(${i})">FINISH</button></td>
+                <td><button class="btn-finish" onclick="archiveRow(${i})">FINISH</button></td>
             `;
             tbody.appendChild(tr);
         }
     }
 
-    // --- LOGIC GATES ---
-    function isoDate(eliteStr) {
-        if(!eliteStr) return "";
-        const d = fromEliteDate(eliteStr);
-        return d ? d.toISOString().split('T')[0] : "";
-    }
-
-    function dateToElite(r, c, val) {
-        if(!val) { currentData[r][c] = ""; }
-        else {
-            const d = new Date(val);
-            currentData[r][c] = toEliteDate(d);
-        }
+    // --- LOGIC ---
+    function toIso(s) { if(!s) return ""; const d = fromElite(s); return d ? d.toISOString().split('T')[0] : ""; }
+    
+    function applyDate(r, c, val) {
+        currentData[r][c] = val ? eliteDate(new Date(val)) : "";
         if(c >= 7 && c <= 10) calcDays(r);
         sync();
     }
 
     function calcDays(i) {
-        const start = fromEliteDate(currentData[i][7]);
-        const end = fromEliteDate(currentData[i][10] || currentData[i][9]);
+        const start = fromElite(currentData[i][7]);
+        const end = fromElite(currentData[i][10] || currentData[i][9]);
         if(start && end) {
             let diff = Math.floor((end - start) / 86400000);
-            currentData[i][12] = diff <= 0 ? 1 : diff;
-            math(i);
+            currentData[i][12] = diff <= 0 ? 1 : diff; // Method A
+            autoMath(i);
         }
     }
 
-    function math(i) {
-        const d = parseFloat(currentData[i][12]) || 0;
-        const p = parseFloat(currentData[i][13]) || 0;
-        const a = parseFloat(currentData[i][15]) || 0;
-        currentData[i][14] = d * p;
-        currentData[i][16] = (d * p) - a;
+    function autoMath(i) {
+        const days = parseFloat(currentData[i][12]) || 0;
+        const price = parseFloat(currentData[i][13]) || 0;
+        const adv = parseFloat(currentData[i][15]) || 0;
+        currentData[i][14] = days * price;
+        currentData[i][16] = (days * price) - adv;
         renderTable(); 
         sync();
     }
 
-    function resetRem(i) {
+    function resetRemaining(i) {
         currentData[i][16] = (parseFloat(currentData[i][14]) || 0) - (parseFloat(currentData[i][15]) || 0);
         renderTable(); sync();
     }
 
-    function processOverdue() {
+    function processColors() {
         for (let i = 1; i < currentData.length; i++) {
             const tr = document.getElementById(`row-${i}`);
             if(!tr) continue;
             let cls = "";
             const row = currentData[i];
-            const end = fromEliteDate(row[10] || row[9]);
+            const end = fromElite(row[10] || row[9]);
             if(end && row[2]) {
                 const [h, m] = (row[11] || "00:00").split(':').map(Number);
-                end.setHours(h, m);
+                end.setHours(h, m, 0);
                 if(end < officialTime) cls = "row-overdue";
             }
             if(!cls) {
@@ -260,50 +256,75 @@
         }
     }
 
+    // --- SYNC & ACTIONS ---
+    function upd(r, c, v) { currentData[r][c] = v; sync(); }
+
+    async function sync() {
+        updateStatus("SAVING...", "#f39c12");
+        await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) });
+        updateStatus("LIVE", "#2ecc71");
+    }
+
     async function handleUpload(i, input) {
         const file = input.files[0];
+        if(!file) return;
+        document.getElementById(`up-ld-${i}`).style.display = "block";
         const reader = new FileReader();
         reader.onload = async (e) => {
             const base64 = e.target.result.split(',')[1];
             const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "upload", row: i, filename: file.name, mimeType: file.type, base64: base64 })});
             currentData[i][6] = await res.text();
+            document.getElementById(`up-ld-${i}`).style.display = "none";
             renderTable();
         };
         reader.readAsDataURL(file);
     }
 
-    function upd(r, c, v) { currentData[r][c] = v; sync(); }
-    async function sync() { await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveAll", data: currentData }) }); }
-
     async function runHistorySearch() {
+        const status = document.getElementById('search-status');
+        status.innerText = "SEARCHING..."; status.style.color = "#f39c12";
+        
         const q = document.getElementById('uSearch').value.toLowerCase();
         const sD = document.getElementById('dateStart').value ? new Date(document.getElementById('dateStart').value) : null;
         const eD = document.getElementById('dateEnd').value ? new Date(document.getElementById('dateEnd').value) : null;
         
         const res = await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "getHistory" }) });
-        const h = await res.json();
-        const filtered = h.filter((r, idx) => {
+        const history = await res.json();
+        const filtered = history.filter((r, idx) => {
             if(idx === 0) return false;
             const textMatch = q === "" || r.some(c => String(c).toLowerCase().includes(q));
-            const rOut = fromEliteDate(r[7]);
-            const rIn = fromEliteDate(r[10]||r[9]);
+            const rOut = fromElite(r[7]);
+            const rIn = fromElite(r[10]||r[9]);
             let dateMatch = true;
-            if(sD && eD && rOut && rIn) dateMatch = (rOut <= eD && rIn >= sD);
+            if(sD && eD && rOut && rIn) {
+                sD.setHours(0,0,0); eD.setHours(23,59,59);
+                dateMatch = (rOut <= eD && rIn >= sD);
+            }
             return textMatch && dateMatch;
         });
 
         document.getElementById('resBody').innerHTML = filtered.map(r => `
-            <tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]?'<a href="'+r[6]+'" target="_blank">📄</a>':''}</td><td>${r[7]}</td><td>${r[8]}</td><td>${r[9]}</td><td>${r[10]}</td><td>${r[11]}</td><td>${r[12]}</td><td>${r[13]}</td><td>${r[14]}</td><td>${r[15]}</td><td>${r[16]}</td><td>${r[17]}</td><td>${r[18]}</td><td>${r[19]}</td><td>${r[20]||''}</td></tr>
+            <tr>
+                <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td>
+                <td>${r[6]?'<a href="'+r[6]+'" target="_blank">📄</a>':''}</td>
+                <td>${r[7]}</td><td>${r[8]}</td><td>${r[9]}</td><td>${r[10]}</td><td>${r[11]}</td>
+                <td>${r[12]}</td><td>${r[13]}</td><td>${r[14]}</td><td>${r[15]}</td><td>${r[16]}</td>
+                <td>${r[17]}</td><td style="color:#f1c40f">${'★'.repeat(parseInt(r[18])||0)}</td><td>${r[19]}</td><td>${r[20]}</td>
+            </tr>
         `).join('');
+        status.innerText = filtered.length + " RESULTS FOUND"; status.style.color = "#2ecc71";
     }
 
-    async function archive(i) {
-        if(confirm("ARCHIVE?")) {
+    async function archiveRow(i) {
+        if(confirm("MOVE TO HISTORY?")) {
+            updateStatus("ARCHIVING...", "#f39c12");
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "archive", row: i, data: currentData[i], officialTime: officialTime.toISOString() })});
             location.reload();
         }
     }
 
+    function updateStatus(t, c) { document.getElementById('sync-text').innerText = t; document.getElementById('sync-dot').style.color = c; }
+    
     init();
 </script>
 </body>
