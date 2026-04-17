@@ -49,6 +49,7 @@
         @media (min-width: 768px) { .search-grid { flex-direction: row; } }
         .search-box { background: white; padding: 10px; border-radius: 8px; color: black; display: flex; gap: 10px; align-items: center; min-width: 280px; }
         .btn-search { background: var(--blue); color: white; border: none; padding: 12px 35px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-reset { background: #e74c3c; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body onbeforeunload="return handleExit()">
@@ -92,6 +93,7 @@
             <label style="font-size:10px; color:gray;">TO</label><input type="text" id="dateEnd" placeholder="dd/mm/yy" style="width:80px;">
         </div>
         <button class="btn-search" onclick="runHistorySearch()">SEARCH</button>
+        <button class="btn-reset" onclick="clearHistorySearch()">RESET</button>
     </div>
     <div style="margin-top: 15px; font-weight: bold;"><span id="search-status">READY</span></div>
 
@@ -291,6 +293,15 @@
             </tr>
         `).join('');
         status.innerText = filtered.length + " RESULTS FOUND"; status.style.color = "#2ecc71";
+    }
+
+    function clearHistorySearch() {
+        document.getElementById('uSearch').value = "";
+        document.getElementById('dateStart').value = "";
+        document.getElementById('dateEnd').value = "";
+        document.getElementById('resBody').innerHTML = "";
+        document.getElementById('search-status').innerText = "READY";
+        document.getElementById('search-status').style.color = "white";
     }
 
     async function archiveRow(i) {
